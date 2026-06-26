@@ -2,6 +2,14 @@ from http.server import BaseHTTPRequestHandler
 import json
 import base64
 import io
+import os
+
+import sentry_sdk
+sentry_sdk.init(
+    dsn=os.environ.get('SENTRY_DSN'),
+    enabled=bool(os.environ.get('SENTRY_DSN')),
+    environment=os.environ.get('VERCEL_ENV', 'development'),
+)
 
 import matplotlib
 matplotlib.use('Agg')
@@ -36,6 +44,7 @@ class handler(BaseHTTPRequestHandler):
         except ValueError as e:
             self._respond(400, {'error': str(e)})
         except Exception as e:
+            sentry_sdk.capture_exception(e)
             self._respond(500, {'error': str(e)})
 
     def _respond(self, status: int, body: dict):
