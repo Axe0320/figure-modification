@@ -4,12 +4,15 @@ import base64
 import io
 import os
 
-import sentry_sdk
-sentry_sdk.init(
-    dsn=os.environ.get('SENTRY_DSN'),
-    enabled=bool(os.environ.get('SENTRY_DSN')),
-    environment=os.environ.get('VERCEL_ENV', 'development'),
-)
+try:
+    import sentry_sdk
+    sentry_sdk.init(
+        dsn=os.environ.get('SENTRY_DSN'),
+        enabled=bool(os.environ.get('SENTRY_DSN')),
+        environment=os.environ.get('VERCEL_ENV', 'development'),
+    )
+except Exception:
+    sentry_sdk = None  # type: ignore
 
 import matplotlib
 matplotlib.use('Agg')
@@ -44,7 +47,8 @@ class handler(BaseHTTPRequestHandler):
         except ValueError as e:
             self._respond(400, {'error': str(e)})
         except Exception as e:
-            sentry_sdk.capture_exception(e)
+            if sentry_sdk:
+                sentry_sdk.capture_exception(e)
             self._respond(500, {'error': str(e)})
 
     def _respond(self, status: int, body: dict):
