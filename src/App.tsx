@@ -88,24 +88,6 @@ export default function App() {
           {status === 'loading' ? '生成中...' : '生成'}
         </button>
 
-        <button
-          className={styles.button}
-          style={{ marginLeft: '8px', background: '#e53e3e' }}
-          onClick={async () => {
-            const res = await fetch('/api/render', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ type: 'confusion_matrix', data: [[1,2],[3,4]], params: { figsize_cm: 'invalid' }, output: { format: 'png' } }),
-            })
-            const data: RenderResult = await res.json()
-            const msg = data.error ?? `HTTP ${res.status}`
-            Sentry.captureException(new Error(`Sentry test: ${msg}`))
-            alert(`Sentry に送信: ${msg}`)
-          }}
-        >
-          Sentry テスト
-        </button>
-
         {elapsed !== null && (
           <p className={styles.elapsed}>
             応答時間: <strong>{elapsed} ms</strong>
