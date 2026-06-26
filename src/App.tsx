@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import * as Sentry from '@sentry/react'
 import styles from './App.module.css'
 
 interface RenderResult {
@@ -47,7 +48,9 @@ export default function App() {
       const data: RenderResult = await res.json()
 
       if (!res.ok || data.error) {
-        setError(data.error ?? `HTTP ${res.status}`)
+        const msg = data.error ?? `HTTP ${res.status}`
+        Sentry.captureException(new Error(`render API: ${msg}`))
+        setError(msg)
         setStatus('error')
         return
       }
@@ -56,6 +59,7 @@ export default function App() {
       setStatus('success')
     } catch (e) {
       setElapsed(Math.round(performance.now() - start))
+      Sentry.captureException(e)
       setError(String(e))
       setStatus('error')
     }
