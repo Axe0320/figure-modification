@@ -1,29 +1,23 @@
 import { useState } from 'react'
-import type { ScatterState, ScatterParams } from '../../types/figures'
+import type { ViolinState, ViolinParams } from '../../types/figures'
 import ImeInput from '../common/ImeInput'
 import SizeEditor from './SizeEditor'
 import HexColorEditor from './HexColorEditor'
+import BracketSection from './BracketSection'
 
 interface Props {
-  figure: ScatterState
-  onChange: (patch: Partial<ScatterParams>) => void
+  figure: ViolinState
+  onChange: (patch: Partial<ViolinParams>) => void
   onReset: () => void
 }
 
-type Section = 'text' | 'display' | 'axis' | 'size'
+type Section = 'text' | 'display' | 'bracket' | 'axis' | 'size'
 const SECTIONS: { key: Section; label: string }[] = [
   { key: 'text',    label: 'テキスト' },
   { key: 'display', label: '表示' },
+  { key: 'bracket', label: '有意差' },
   { key: 'axis',    label: '軸' },
   { key: 'size',    label: 'サイズ' },
-]
-
-const LEGEND_LOCS = [
-  { val: 'best', label: '自動' },
-  { val: 'upper right', label: '右上' }, { val: 'upper left', label: '左上' },
-  { val: 'lower right', label: '右下' }, { val: 'lower left', label: '左下' },
-  { val: 'center right', label: '右中央' }, { val: 'center left', label: '左中央' },
-  { val: 'outside', label: '外側' },
 ]
 
 const GRID_STYLES = [
@@ -38,7 +32,7 @@ const is = (active: boolean): React.CSSProperties => ({
   cursor: 'pointer', transition: 'all 0.15s', whiteSpace: 'nowrap',
 })
 const inputStyle: React.CSSProperties = {
-  border: '1px solid #E5E7EB', borderRadius: 8, outline: 'none', transition: 'border-color 0.15s',
+  border: '1px solid #E5E7EB', borderRadius: 8, outline: 'none',
 }
 
 function Slider({ label, value, min, max, step = 1, unit = '', onChange }: {
@@ -89,27 +83,11 @@ function LimInput({ label, value, onChange }: { label: string; value: [number, n
   )
 }
 
-function StepInput({ label, value, onChange }: { label: string; value: number | null; onChange: (v: number | null) => void }) {
-  const enabled = value !== null
-  return (
-    <div>
-      <div className="flex items-center justify-between mb-1">
-        <label className="text-xs text-gray-500">{label}</label>
-        <button onClick={() => onChange(enabled ? null : 1)} className="w-8 h-4 rounded-full transition-all relative" style={{ background: enabled ? '#6C63FF' : '#D1D5DB' }}>
-          <span className="absolute top-0.5 w-3 h-3 rounded-full bg-white transition-all shadow-sm" style={{ left: enabled ? '1rem' : '0.125rem' }} />
-        </button>
-      </div>
-      {enabled && (
-        <input type="number" min={0} step="any" value={value!} onChange={(e) => { const v = Number(e.target.value); if (v > 0) onChange(v) }} className="w-full text-sm px-2 py-1" style={inputStyle} onFocus={(e) => { e.currentTarget.style.borderColor = '#6C63FF' }} onBlur={(e) => { e.currentTarget.style.borderColor = '#E5E7EB' }} />
-      )}
-    </div>
-  )
-}
 
-export default function ScatterEditor({ figure, onChange, onReset }: Props) {
+export default function ViolinEditor({ figure, onChange, onReset }: Props) {
   const [open, setOpen] = useState<Section>('text')
   const p = figure.params
-  const nSeries = figure.data.series.length
+  const nGroups = figure.data.groups.length
 
   const setColor = (i: number, color: string) => {
     const next = [...p.colors]; while (next.length <= i) next.push('#6C63FF')
@@ -129,7 +107,7 @@ export default function ScatterEditor({ figure, onChange, onReset }: Props) {
 
       {SECTIONS.map(({ key, label }) => (
         <div key={key} className="overflow-hidden"
-          style={{ border: open === key ? '1px solid #C4B5FD' : '1px solid #E5E7EB', borderRadius: 10, transition: 'border-color 0.15s' }}>
+          style={{ border: open === key ? '1px solid #C4B5FD' : '1px solid #E5E7EB', borderRadius: 10 }}>
           <button className="w-full flex items-center justify-between px-3 py-2.5"
             style={{ background: open === key ? '#F5F3FF' : 'white' }}
             onClick={() => setOpen((prev) => prev === key ? 'text' : key)}>
@@ -154,40 +132,43 @@ export default function ScatterEditor({ figure, onChange, onReset }: Props) {
 
               {key === 'display' && (
                 <>
-                  {/* 系列ごとの色 */}
                   <div>
-                    <label className="block text-xs text-gray-500 mb-1.5">系列ごとの色</label>
+                    <label className="block text-xs text-gray-500 mb-1.5">グループごとの色</label>
                     <div className="space-y-2">
-                      {Array.from({ length: nSeries }, (_, i) => (
+                      {Array.from({ length: nGroups }, (_, i) => (
                         <div key={i} className="space-y-1">
-                          <span className="text-xs text-gray-400 block">系列 {i + 1}</span>
+                          <span className="text-xs text-gray-400 block">{p.labels[i] ?? `Group ${i + 1}`}</span>
                           <HexColorEditor value={p.colors[i] ?? '#6C63FF'} onChange={(c) => setColor(i, c)} />
                         </div>
                       ))}
                     </div>
                   </div>
-
-                  <Slider label="点のサイズ" value={p.marker_size} min={10} max={300} step={10} onChange={(v) => onChange({ marker_size: v })} />
                   <div>
-                    <label className="block text-xs text-gray-500 mb-1">透明度 (alpha)</label>
+                    <label className="block text-xs text-gray-500 mb-1">向き</label>
+                    <div className="flex gap-1.5">
+                      {[{ val: 'vertical', label: '縦' }, { val: 'horizontal', label: '横' }].map(({ val, label: lbl }) => (
+                        <button key={val} onClick={() => onChange({ orientation: val as 'vertical' | 'horizontal' })} style={is(p.orientation === val)}>{lbl}</button>
+                      ))}
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-xs text-gray-500 mb-1">内部表示</label>
+                    <div className="flex gap-1.5 flex-wrap">
+                      {[{ val: 'box', label: 'ボックス' }, { val: 'stick', label: '散布' }, { val: 'none', label: 'なし' }].map(({ val, label: lbl }) => (
+                        <button key={val} onClick={() => onChange({ inner: val as 'box' | 'stick' | 'none' })} style={is(p.inner === val)}>{lbl}</button>
+                      ))}
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-xs text-gray-500 mb-1">透明度</label>
                     <div className="flex items-center gap-2">
                       <input type="range" min={0.1} max={1} step={0.05} value={p.alpha} onChange={(e) => onChange({ alpha: Number(e.target.value) })} className="flex-1 accent-[#6C63FF]" />
                       <span className="text-xs text-gray-600 w-10 text-right">{p.alpha.toFixed(2)}</span>
                     </div>
                   </div>
-
-                  {/* 凡例位置 */}
-                  {nSeries > 1 && (
-                    <div>
-                      <label className="block text-xs text-gray-500 mb-1.5">凡例の位置</label>
-                      <div className="flex flex-wrap gap-1">
-                        {LEGEND_LOCS.map(({ val, label: lbl }) => (
-                          <button key={val} onClick={() => onChange({ legend_loc: val })} style={is(p.legend_loc === val)}>{lbl}</button>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
+                  <Toggle label="中央値を表示" value={p.show_median} onChange={(v) => onChange({ show_median: v })} />
+                  <Toggle label="平均値を表示 (◆)" value={p.show_mean} onChange={(v) => onChange({ show_mean: v })} />
+                  <Toggle label="各値を表示 (●)" value={p.show_points} onChange={(v) => onChange({ show_points: v })} />
                   <Toggle label="グリッド線" value={p.show_grid} onChange={(v) => onChange({ show_grid: v })} />
                   {p.show_grid && (
                     <div>
@@ -202,12 +183,14 @@ export default function ScatterEditor({ figure, onChange, onReset }: Props) {
                 </>
               )}
 
+              {key === 'bracket' && (
+                <BracketSection brackets={p.brackets} nGroups={nGroups} groups={figure.data.groups} labels={p.labels} onChange={(b) => onChange({ brackets: b })} />
+              )}
+
               {key === 'axis' && (
                 <>
                   <LimInput label="X軸範囲" value={p.xlim} onChange={(v) => onChange({ xlim: v })} />
                   <LimInput label="Y軸範囲" value={p.ylim} onChange={(v) => onChange({ ylim: v })} />
-                  <StepInput label="X目盛間隔" value={p.xtick_step} onChange={(v) => onChange({ xtick_step: v })} />
-                  <StepInput label="Y目盛間隔" value={p.ytick_step} onChange={(v) => onChange({ ytick_step: v })} />
                 </>
               )}
 

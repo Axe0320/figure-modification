@@ -41,6 +41,13 @@ export const validate = (fig: FigureState): string | null => {
     case 'histogram':
       if (!fig.data.length) return 'データを入力してください'
       break
+    case 'box_plot':
+    case 'violin_plot':
+      if (!fig.data.groups.length || !fig.data.groups[0].length) return 'データを入力してください'
+      break
+    case 'error_bar':
+      if (!fig.data.labels.length || !fig.data.series.length) return 'データを入力してください'
+      break
   }
   return null
 }

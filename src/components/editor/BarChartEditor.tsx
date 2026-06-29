@@ -20,12 +20,11 @@ const SECTIONS: { key: Section; label: string }[] = [
 ]
 
 const LEGEND_LOCS = [
-  { val: 'best',        label: '自動' },
-  { val: 'upper right', label: '右上' },
-  { val: 'upper left',  label: '左上' },
-  { val: 'lower right', label: '右下' },
-  { val: 'lower left',  label: '左下' },
-  { val: 'outside',     label: '外側' },
+  { val: 'best',         label: '自動' },
+  { val: 'upper right',  label: '右上' }, { val: 'upper left',  label: '左上' },
+  { val: 'lower right',  label: '右下' }, { val: 'lower left',  label: '左下' },
+  { val: 'center right', label: '右中央' }, { val: 'center left', label: '左中央' },
+  { val: 'outside',      label: '外側' },
 ]
 const GRID_STYLES = [
   { val: '--', label: '破線' },

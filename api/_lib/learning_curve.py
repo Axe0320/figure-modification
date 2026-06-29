@@ -57,6 +57,11 @@ def render(data: dict, params: dict):
         if ylim_right and len(ylim_right) == 2:
             ax2.set_ylim(float(ylim_right[0]), float(ylim_right[1]))
 
+    # 左右軸の目盛を揃える（グリッド線を一致させる）
+    if ax2:
+        ax1.yaxis.set_major_locator(ticker.MaxNLocator(nbins=5, integer=False))
+        ax2.yaxis.set_major_locator(ticker.MaxNLocator(nbins=5, integer=False))
+
     # X軸
     xlim = params.get('xlim')
     if xlim and len(xlim) == 2:
@@ -72,10 +77,10 @@ def render(data: dict, params: dict):
     # 凡例（両軸のラインをまとめる）
     legend_loc = params.get('legend_loc', 'best')
     if legend_loc == 'outside':
-        ax1.legend(handles=lines, loc='upper left', bbox_to_anchor=(1.05, 1),
-                   borderaxespad=0, fontsize=tick_fs)
+        ax1.legend(handles=lines, loc='center left', bbox_to_anchor=(1.05, 0.5),
+                   borderaxespad=0, fontsize=tick_fs, framealpha=0.9)
     else:
-        ax1.legend(handles=lines, loc=legend_loc, fontsize=tick_fs)
+        ax1.legend(handles=lines, loc=legend_loc, fontsize=tick_fs, framealpha=0.9)
 
     fig.tight_layout()
     return fig

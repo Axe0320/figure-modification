@@ -11,6 +11,9 @@ import type {
   PrParams,              PrState,
   LearningParams,        LearningState,
   FeatureParams,         FeatureState,
+  BoxParams,             BoxState,
+  ViolinParams,          ViolinState,
+  ErrorBarParams,        ErrorBarState,
 } from './types/figures'
 import { useFigureStore } from './store/figureStore'
 import { getPreview } from './cache/previewCache'
@@ -26,6 +29,9 @@ import RocInput from './components/input/RocInput'
 import PrInput from './components/input/PrInput'
 import LearningInput from './components/input/LearningInput'
 import FeatureInput from './components/input/FeatureInput'
+import BoxInput from './components/input/BoxInput'
+import ViolinInput from './components/input/ViolinInput'
+import ErrorBarInput from './components/input/ErrorBarInput'
 import FigureEditor from './components/editor/FigureEditor'
 import HeatmapEditor from './components/editor/HeatmapEditor'
 import BarChartEditor from './components/editor/BarChartEditor'
@@ -36,6 +42,9 @@ import RocEditor from './components/editor/RocEditor'
 import PrEditor from './components/editor/PrEditor'
 import LearningEditor from './components/editor/LearningEditor'
 import FeatureEditor from './components/editor/FeatureEditor'
+import BoxEditor from './components/editor/BoxEditor'
+import ViolinEditor from './components/editor/ViolinEditor'
+import ErrorBarEditor from './components/editor/ErrorBarEditor'
 import FigurePreview from './components/preview/FigurePreview'
 import FigureList from './components/common/FigureList'
 import ComposeSettings from './components/compose/ComposeSettings'
@@ -217,6 +226,72 @@ const DEFAULT_HISTOGRAM: HistogramState = {
   },
 }
 
+const DEFAULT_BOX: BoxState = {
+  id: 'fig-1',
+  type: 'box_plot',
+  data: {
+    groups: [
+      [4.2, 4.8, 5.1, 3.9, 5.5, 4.6, 4.1, 5.3, 4.7, 5.0],
+      [6.1, 6.8, 7.2, 5.9, 7.5, 6.4, 6.2, 7.0, 6.7, 7.1],
+      [3.1, 3.5, 2.8, 3.9, 4.0, 3.2, 2.9, 3.7, 3.4, 3.8],
+    ],
+  },
+  params: {
+    title: '', fontsize: 12, figsize_cm: [12, 10], dpi: 150,
+    xlabel: '', ylabel: '',
+    labels: ['Group A', 'Group B', 'Group C'],
+    colors: ['#6C63FF', '#FF6584', '#43CFAA', '#FFB347', '#5BC0EB', '#C879FF'],
+    tick_fontsize: 10, orientation: 'vertical',
+    notch: false, showfliers: true, show_mean: false, show_median: true, show_points: false,
+    show_grid: false, grid_linestyle: '--',
+    xlim: null, ylim: null, brackets: [],
+  },
+}
+
+const DEFAULT_VIOLIN: ViolinState = {
+  id: 'fig-1',
+  type: 'violin_plot',
+  data: {
+    groups: [
+      [4.2, 4.8, 5.1, 3.9, 5.5, 4.6, 4.1, 5.3, 4.7, 5.0, 4.4, 4.9],
+      [6.1, 6.8, 7.2, 5.9, 7.5, 6.4, 6.2, 7.0, 6.7, 7.1, 6.5, 6.9],
+      [3.1, 3.5, 2.8, 3.9, 4.0, 3.2, 2.9, 3.7, 3.4, 3.8, 3.0, 3.6],
+    ],
+  },
+  params: {
+    title: '', fontsize: 12, figsize_cm: [12, 10], dpi: 150,
+    xlabel: '', ylabel: '',
+    labels: ['Group A', 'Group B', 'Group C'],
+    colors: ['#6C63FF', '#FF6584', '#43CFAA', '#FFB347', '#5BC0EB', '#C879FF'],
+    tick_fontsize: 10, orientation: 'vertical',
+    inner: 'box', alpha: 0.7, show_mean: false, show_median: true, show_points: false,
+    show_grid: false, grid_linestyle: '--',
+    xlim: null, ylim: null, brackets: [],
+  },
+}
+
+const DEFAULT_ERRORBAR: ErrorBarState = {
+  id: 'fig-1',
+  type: 'error_bar',
+  data: {
+    labels: ['条件A', '条件B', '条件C', '条件D'],
+    series: [
+      { name: 'Method 1', means: [4.2, 6.1, 3.8, 5.5], errors: [0.4, 0.5, 0.3, 0.6] },
+      { name: 'Method 2', means: [3.5, 5.4, 4.2, 4.9], errors: [0.3, 0.6, 0.4, 0.5] },
+    ],
+  },
+  params: {
+    title: '', fontsize: 12, figsize_cm: [14, 10], dpi: 150,
+    xlabel: '', ylabel: '',
+    colors: ['#6C63FF', '#FF6584', '#43CFAA', '#FFB347', '#5BC0EB', '#C879FF'],
+    legend: ['Method 1', 'Method 2'], legend_loc: 'best',
+    error_color: '#374151', capsize: 5, bar_width: 0.6,
+    tick_fontsize: 10, orientation: 'vertical', show_values: false,
+    show_grid: false, grid_linestyle: '--',
+    xlim: null, ylim: null, ytick_step: null, brackets: [],
+  },
+}
+
 const FIGURE_TYPES: { type: FigureType; label: string }[] = [
   { type: 'confusion_matrix',   label: '混合行列' },
   { type: 'heatmap',            label: 'ヒートマップ' },
@@ -228,6 +303,9 @@ const FIGURE_TYPES: { type: FigureType; label: string }[] = [
   { type: 'pr_curve',           label: 'PR曲線' },
   { type: 'learning_curve',     label: '学習曲線' },
   { type: 'feature_importance', label: '特徴量重要度' },
+  { type: 'box_plot',           label: '箱ひげ' },
+  { type: 'violin_plot',        label: 'バイオリン' },
+  { type: 'error_bar',          label: 'エラーバー' },
 ]
 
 const DEFAULT_BY_TYPE: Record<FigureType, FigureState> = {
@@ -241,6 +319,23 @@ const DEFAULT_BY_TYPE: Record<FigureType, FigureState> = {
   pr_curve:           DEFAULT_PR,
   learning_curve:     DEFAULT_LEARNING,
   feature_importance: DEFAULT_FEATURE,
+  box_plot:           DEFAULT_BOX,
+  violin_plot:        DEFAULT_VIOLIN,
+  error_bar:          DEFAULT_ERRORBAR,
+}
+
+const CLEAR_DATA_BY_TYPE: Partial<Record<FigureType, FigureState['data']>> = {
+  bar_chart:          { labels: [], values: [[]] },
+  line_plot:          { x: [], y: [[]] },
+  scatter_plot:       { series: [{ x: [], y: [] }] },
+  histogram:          [],
+  roc_curve:          { fpr: [[]], tpr: [[]], auc: [0] },
+  pr_curve:           { precision: [[]], recall: [[]], ap: [0] },
+  learning_curve:     { epochs: [], series: [] },
+  feature_importance: { features: [], importances: [] },
+  box_plot:           { groups: [[]] },
+  violin_plot:        { groups: [[]] },
+  error_bar:          { labels: [], series: [{ name: 'Series 1', means: [], errors: [] }] },
 }
 
 const genId = () => `fig-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`
@@ -380,6 +475,9 @@ export default function App() {
   const handlePrParamsChange       = makeParamsHandler<PrParams>('pr_curve')
   const handleLearningParamsChange = makeParamsHandler<LearningParams>('learning_curve')
   const handleFeatureParamsChange  = makeParamsHandler<FeatureParams>('feature_importance')
+  const handleBoxParamsChange      = makeParamsHandler<BoxParams>('box_plot')
+  const handleViolinParamsChange   = makeParamsHandler<ViolinParams>('violin_plot')
+  const handleErrorBarParamsChange = makeParamsHandler<ErrorBarParams>('error_bar')
 
   // ----------------------------------------------------- data handlers
   const handleCMDataChange = useCallback((data: number[][]) => {
@@ -465,6 +563,34 @@ export default function App() {
     updateFigure(selectedFigure.id, (f) => ({ ...f, data } as HistogramState))
   }, [selectedFigure, updateFigure])
 
+  const handleBoxDataChange = useCallback((data: BoxState['data'], labels: string[]) => {
+    if (!selectedFigure || selectedFigure.type !== 'box_plot') return
+    updateFigure(selectedFigure.id, (f) => ({
+      ...f, data,
+      params: { ...(f as BoxState).params, labels },
+    } as BoxState))
+  }, [selectedFigure, updateFigure])
+
+  const handleViolinDataChange = useCallback((data: ViolinState['data'], labels: string[]) => {
+    if (!selectedFigure || selectedFigure.type !== 'violin_plot') return
+    updateFigure(selectedFigure.id, (f) => ({
+      ...f, data,
+      params: { ...(f as ViolinState).params, labels },
+    } as ViolinState))
+  }, [selectedFigure, updateFigure])
+
+  const handleErrorBarDataChange = useCallback((data: ErrorBarState['data']) => {
+    if (!selectedFigure || selectedFigure.type !== 'error_bar') return
+    updateFigure(selectedFigure.id, (f) => ({ ...f, data } as ErrorBarState))
+  }, [selectedFigure, updateFigure])
+
+  const handleClearData = useCallback(() => {
+    if (!selectedFigure) return
+    const cleared = CLEAR_DATA_BY_TYPE[selectedFigure.type]
+    if (!cleared) return
+    updateFigure(selectedFigure.id, (f) => ({ ...f, data: cleared } as FigureState))
+  }, [selectedFigure, updateFigure])
+
   // ----------------------------------------------------- reset handlers
   const makeReset = (def: FigureState) =>
     useCallback(() => {
@@ -482,6 +608,9 @@ export default function App() {
   const handlePrReset       = makeReset(DEFAULT_PR)
   const handleLearningReset = makeReset(DEFAULT_LEARNING)
   const handleFeatureReset  = makeReset(DEFAULT_FEATURE)
+  const handleBoxReset      = makeReset(DEFAULT_BOX)
+  const handleViolinReset   = makeReset(DEFAULT_VIOLIN)
+  const handleErrorBarReset = makeReset(DEFAULT_ERRORBAR)
 
   // ----------------------------------------------------- download
   const handleDownload = () => {
@@ -606,7 +735,20 @@ export default function App() {
               {selectedFigure && (
                 <div className="flex-1 overflow-y-auto">
                     <section className="p-4 border-b border-gray-100">
-                      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">データ入力</p>
+                      <div className="flex items-center justify-between mb-3">
+                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">データ入力</p>
+                        {CLEAR_DATA_BY_TYPE[selectedFigure.type] !== undefined && (
+                          <button
+                            onClick={handleClearData}
+                            className="text-xs font-semibold px-2.5 py-1 transition-all"
+                            style={{ color: '#EF4444', border: '1px solid #FCA5A5', borderRadius: 6, background: '#FFF5F5' }}
+                            onMouseEnter={(e) => { e.currentTarget.style.background = '#FEE2E2' }}
+                            onMouseLeave={(e) => { e.currentTarget.style.background = '#FFF5F5' }}
+                          >
+                            データクリア
+                          </button>
+                        )}
+                      </div>
                       {selectedFigure.type === 'confusion_matrix' && (
                         <CreateMode data={selectedFigure.data} onDataChange={handleCMDataChange} />
                       )}
@@ -636,6 +778,15 @@ export default function App() {
                       )}
                       {selectedFigure.type === 'feature_importance' && (
                         <FeatureInput data={(selectedFigure as FeatureState).data} onChange={handleFeatureDataChange} />
+                      )}
+                      {selectedFigure.type === 'box_plot' && (
+                        <BoxInput data={(selectedFigure as BoxState).data} labels={(selectedFigure as BoxState).params.labels} onChange={handleBoxDataChange} />
+                      )}
+                      {selectedFigure.type === 'violin_plot' && (
+                        <ViolinInput data={(selectedFigure as ViolinState).data} labels={(selectedFigure as ViolinState).params.labels} onChange={handleViolinDataChange} />
+                      )}
+                      {selectedFigure.type === 'error_bar' && (
+                        <ErrorBarInput data={(selectedFigure as ErrorBarState).data} onChange={handleErrorBarDataChange} />
                       )}
                     </section>
 
@@ -670,6 +821,15 @@ export default function App() {
                       )}
                       {selectedFigure.type === 'feature_importance' && (
                         <FeatureEditor figure={selectedFigure as FeatureState} onChange={handleFeatureParamsChange} onReset={handleFeatureReset} />
+                      )}
+                      {selectedFigure.type === 'box_plot' && (
+                        <BoxEditor figure={selectedFigure as BoxState} onChange={handleBoxParamsChange} onReset={handleBoxReset} />
+                      )}
+                      {selectedFigure.type === 'violin_plot' && (
+                        <ViolinEditor figure={selectedFigure as ViolinState} onChange={handleViolinParamsChange} onReset={handleViolinReset} />
+                      )}
+                      {selectedFigure.type === 'error_bar' && (
+                        <ErrorBarEditor figure={selectedFigure as ErrorBarState} onChange={handleErrorBarParamsChange} onReset={handleErrorBarReset} />
                       )}
                     </section>
                   </div>

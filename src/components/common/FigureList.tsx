@@ -21,6 +21,9 @@ const TYPE_LABEL: Record<FigureType, string> = {
   pr_curve:           'PR',
   learning_curve:     'Lrn',
   feature_importance: 'Feat',
+  box_plot:           'Box',
+  violin_plot:        'Vln',
+  error_bar:          'Err',
 }
 const TYPE_FULL: Record<FigureType, string> = {
   confusion_matrix:   '混合行列',
@@ -33,11 +36,15 @@ const TYPE_FULL: Record<FigureType, string> = {
   pr_curve:           'PR曲線',
   learning_curve:     '学習曲線',
   feature_importance: '特徴量重要度',
+  box_plot:           'ボックスプロット',
+  violin_plot:        'バイオリンプロット',
+  error_bar:          'エラーバー',
 }
 
 const ALL_TYPES: FigureType[] = [
   'confusion_matrix', 'heatmap', 'bar_chart', 'line_plot', 'scatter_plot', 'histogram',
   'roc_curve', 'pr_curve', 'learning_curve', 'feature_importance',
+  'box_plot', 'violin_plot', 'error_bar',
 ]
 
 export default function FigureList({ figures, selectedId, onSelect, onDelete, onAdd, onDuplicate }: Props) {

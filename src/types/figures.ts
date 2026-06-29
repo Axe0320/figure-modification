@@ -9,6 +9,9 @@ export type FigureType =
   | 'pr_curve'
   | 'learning_curve'
   | 'feature_importance'
+  | 'box_plot'
+  | 'violin_plot'
+  | 'error_bar'
 
 export type OutputFormat = 'png' | 'svg' | 'pdf' | 'eps'
 
@@ -288,6 +291,62 @@ export type FeatureState = BaseFigureState & {
   params: FeatureParams
 }
 
+// ------------------------------------------------------------------ Phase 7
+
+export interface BracketItem {
+  group1: number
+  group2: number
+  label: string
+  height: number | null
+}
+
+// box_plot
+export type BoxData = { groups: number[][] }
+export interface BoxParams extends BaseFigureParams {
+  xlabel: string; ylabel: string
+  labels: string[]; colors: string[]
+  tick_fontsize: number
+  orientation: 'vertical' | 'horizontal'
+  notch: boolean; showfliers: boolean; show_mean: boolean; show_median: boolean; show_points: boolean
+  show_grid: boolean; grid_linestyle: string
+  xlim: [number, number] | null; ylim: [number, number] | null
+  brackets: BracketItem[]
+}
+export type BoxState = BaseFigureState & { type: 'box_plot'; data: BoxData; params: BoxParams }
+
+// violin_plot
+export type ViolinData = { groups: number[][] }
+export interface ViolinParams extends BaseFigureParams {
+  xlabel: string; ylabel: string
+  labels: string[]; colors: string[]
+  tick_fontsize: number
+  orientation: 'vertical' | 'horizontal'
+  inner: 'box' | 'stick' | 'none'
+  alpha: number
+  show_mean: boolean; show_median: boolean; show_points: boolean
+  show_grid: boolean; grid_linestyle: string
+  xlim: [number, number] | null; ylim: [number, number] | null
+  brackets: BracketItem[]
+}
+export type ViolinState = BaseFigureState & { type: 'violin_plot'; data: ViolinData; params: ViolinParams }
+
+// error_bar
+export type ErrorBarSeriesItem = { name: string; means: number[]; errors: number[] }
+export type ErrorBarData = { labels: string[]; series: ErrorBarSeriesItem[] }
+export interface ErrorBarParams extends BaseFigureParams {
+  xlabel: string; ylabel: string
+  colors: string[]; legend: string[]; legend_loc: string
+  error_color: string; capsize: number; bar_width: number
+  tick_fontsize: number
+  orientation: 'vertical' | 'horizontal'
+  show_values: boolean
+  show_grid: boolean; grid_linestyle: string
+  xlim: [number, number] | null; ylim: [number, number] | null
+  ytick_step: number | null
+  brackets: BracketItem[]
+}
+export type ErrorBarState = BaseFigureState & { type: 'error_bar'; data: ErrorBarData; params: ErrorBarParams }
+
 // ------------------------------------------------------------------ union
 export type FigureState =
   | ConfusionMatrixState
@@ -300,6 +359,9 @@ export type FigureState =
   | PrState
   | LearningState
   | FeatureState
+  | BoxState
+  | ViolinState
+  | ErrorBarState
 
 // ------------------------------------------------------------------ compose
 
