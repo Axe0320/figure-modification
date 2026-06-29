@@ -43,10 +43,18 @@ class handler(BaseHTTPRequestHandler):
 
         try:
             from _lib.common import fig_to_bytes
-            fig = mod.render(data, params)
+            result = mod.render(data, params)
+            # render() may return (fig, extra_info) or just fig
+            if isinstance(result, tuple):
+                fig, extra = result[0], result[1]
+            else:
+                fig, extra = result, None
             raw = fig_to_bytes(fig, fmt, params.get('dpi', 150))
             b64 = base64.b64encode(raw).decode()
-            self._respond(200, {'image': b64})
+            resp = {'image': b64}
+            if extra is not None:
+                resp['debug'] = extra
+            self._respond(200, resp)
         except ValueError as e:
             self._respond(400, {'error': str(e)})
         except Exception as e:
