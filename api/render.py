@@ -32,8 +32,13 @@ class handler(BaseHTTPRequestHandler):
 
         try:
             mod = importlib.import_module(f'_lib.{figure_type}')
-        except ModuleNotFoundError:
-            self._respond(400, {'error': f'Unknown type: {figure_type}'})
+        except ModuleNotFoundError as e:
+            # Only treat as "unknown type" when the top-level module itself is missing.
+            # If e.name differs, the module exists but has an internal import error.
+            if e.name == f'_lib.{figure_type}':
+                self._respond(400, {'error': f'Unknown type: {figure_type}'})
+            else:
+                self._respond(500, {'error': f'Dependency missing: {e}'})
             return
 
         try:

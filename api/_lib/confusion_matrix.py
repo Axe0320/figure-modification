@@ -3,7 +3,10 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import seaborn as sns
 import numpy as np
-import japanize_matplotlib  # noqa: F401 — registers Japanese font with matplotlib
+try:
+    import japanize_matplotlib  # noqa: F401 — registers Japanese font with matplotlib
+except ImportError:
+    pass  # Japanese font unavailable; labels fall back to matplotlib default
 
 
 # Approximate margins (inches) for colorbar, axis labels, title.
