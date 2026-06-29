@@ -32,16 +32,16 @@ export default function HeatmapEditor({ figure, onChange, onReset }: Props) {
           onClick={onReset}
           className="text-xs font-semibold px-3 py-1.5 transition-all"
           style={{
-            color: '#EF4444',
-            border: '1px solid #FECACA',
+            color: '#D97706',
+            border: '1px solid #FDE68A',
             borderRadius: 6,
-            background: '#FEF2F2',
+            background: '#FFFBEB',
           }}
           onMouseEnter={(e) => {
-            e.currentTarget.style.background = '#FEE2E2'
+            e.currentTarget.style.background = '#FEF3C7'
           }}
           onMouseLeave={(e) => {
-            e.currentTarget.style.background = '#FEF2F2'
+            e.currentTarget.style.background = '#FFFBEB'
           }}
         >
           リセット

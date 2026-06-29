@@ -342,12 +342,12 @@ export default function App() {
       <main className="flex-1 flex overflow-hidden">
         {/* 左パネル */}
         <div
-          className="w-80 flex-shrink-0 bg-white flex flex-col overflow-y-auto"
-          style={{ borderRight: '1px solid #E5E7EB', boxShadow: '2px 0 8px rgba(0,0,0,.04)' }}
+          className="w-80 flex-shrink-0 bg-white flex flex-col"
+          style={{ borderRight: '1px solid #E5E7EB', boxShadow: '2px 0 8px rgba(0,0,0,.04)', overflow: 'hidden' }}
         >
           {appMode === 'edit' ? (
             <>
-              {/* 図リスト */}
+              {/* 図リスト（固定） */}
               <FigureList
                 figures={figures}
                 selectedId={selectedFigure?.id ?? null}
@@ -358,11 +358,8 @@ export default function App() {
 
               {selectedFigure && (
                 <>
-                  {/* 図種タブ (sticky) */}
-                  <div
-                    className="flex border-b border-gray-200 px-3 pt-3 bg-white"
-                    style={{ position: 'sticky', top: 0, zIndex: 10 }}
-                  >
+                  {/* 図種タブ（固定） */}
+                  <div className="flex border-b border-gray-200 px-3 pt-3 bg-white flex-shrink-0">
                     {FIGURE_TYPES.map((t) => (
                       <button
                         key={t.type}
@@ -378,41 +375,44 @@ export default function App() {
                     ))}
                   </div>
 
-                  <section className="p-4 border-b border-gray-100">
-                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">
-                      データ入力
-                    </p>
-                    {selectedFigure.type === 'confusion_matrix' ? (
-                      <CreateMode data={selectedFigure.data} onDataChange={handleCMDataChange} />
-                    ) : (
-                      <HeatmapCreateMode data={selectedFigure.data} onDataChange={handleHMDataChange} />
-                    )}
-                  </section>
+                  {/* スクロール可能な内容エリア */}
+                  <div className="flex-1 overflow-y-auto">
+                    <section className="p-4 border-b border-gray-100">
+                      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">
+                        データ入力
+                      </p>
+                      {selectedFigure.type === 'confusion_matrix' ? (
+                        <CreateMode data={selectedFigure.data} onDataChange={handleCMDataChange} />
+                      ) : (
+                        <HeatmapCreateMode data={selectedFigure.data} onDataChange={handleHMDataChange} />
+                      )}
+                    </section>
 
-                  <section className="p-4">
-                    <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">
-                      パラメータ
-                    </p>
-                    {selectedFigure.type === 'confusion_matrix' ? (
-                      <FigureEditor
-                        figure={selectedFigure as ConfusionMatrixState}
-                        onChange={handleCMParamsChange}
-                        onReset={handleCMReset}
-                      />
-                    ) : (
-                      <HeatmapEditor
-                        figure={selectedFigure as HeatmapState}
-                        onChange={handleHMParamsChange}
-                        onReset={handleHMReset}
-                      />
-                    )}
-                  </section>
+                    <section className="p-4">
+                      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">
+                        パラメータ
+                      </p>
+                      {selectedFigure.type === 'confusion_matrix' ? (
+                        <FigureEditor
+                          figure={selectedFigure as ConfusionMatrixState}
+                          onChange={handleCMParamsChange}
+                          onReset={handleCMReset}
+                        />
+                      ) : (
+                        <HeatmapEditor
+                          figure={selectedFigure as HeatmapState}
+                          onChange={handleHMParamsChange}
+                          onReset={handleHMReset}
+                        />
+                      )}
+                    </section>
+                  </div>
                 </>
               )}
             </>
           ) : (
             /* 構成モード: 設定パネル */
-            <section className="p-4">
+            <section className="p-4 flex-1 overflow-y-auto">
               <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-4">
                 構成設定
               </p>
