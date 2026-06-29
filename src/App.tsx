@@ -573,6 +573,28 @@ export default function App() {
         </div>
       </header>
 
+      {/* 全幅図種タブバー */}
+      {appMode === 'edit' && selectedFigure && (
+        <nav
+          className="bg-white flex-shrink-0 flex overflow-x-auto"
+          style={{ borderBottom: '1px solid #E5E7EB', scrollbarWidth: 'none' }}
+        >
+          {FIGURE_TYPES.map((t) => (
+            <button
+              key={t.type}
+              onClick={() => handleTypeSwitch(t.type)}
+              className="px-4 py-2.5 text-xs font-semibold border-b-2 -mb-px transition-colors whitespace-nowrap shrink-0"
+              style={{
+                borderBottomColor: selectedFigure.type === t.type ? '#6C63FF' : 'transparent',
+                color: selectedFigure.type === t.type ? '#6C63FF' : '#6B7280',
+              }}
+            >
+              {t.label}
+            </button>
+          ))}
+        </nav>
+      )}
+
       <main className="flex-1 flex overflow-hidden">
         {/* 左パネル */}
         <div
@@ -582,28 +604,7 @@ export default function App() {
           {appMode === 'edit' ? (
             <>
               {selectedFigure && (
-                <>
-                  {/* 図種タブ（固定） */}
-                  <div className="bg-white flex-shrink-0" style={{ borderBottom: '1px solid #E5E7EB' }}>
-                    <div className="flex overflow-x-auto" style={{ scrollbarWidth: 'none' }}>
-                      {FIGURE_TYPES.map((t) => (
-                        <button
-                          key={t.type}
-                          onClick={() => handleTypeSwitch(t.type)}
-                          className="px-3 py-2.5 text-xs font-semibold border-b-2 -mb-px transition-colors whitespace-nowrap shrink-0"
-                          style={{
-                            borderBottomColor: selectedFigure.type === t.type ? '#6C63FF' : 'transparent',
-                            color: selectedFigure.type === t.type ? '#6C63FF' : '#6B7280',
-                          }}
-                        >
-                          {t.label}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* スクロール可能エリア */}
-                  <div className="flex-1 overflow-y-auto">
+                <div className="flex-1 overflow-y-auto">
                     <section className="p-4 border-b border-gray-100">
                       <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">データ入力</p>
                       {selectedFigure.type === 'confusion_matrix' && (
@@ -672,7 +673,6 @@ export default function App() {
                       )}
                     </section>
                   </div>
-                </>
               )}
             </>
           ) : (
