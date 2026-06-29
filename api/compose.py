@@ -11,8 +11,8 @@ sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 import matplotlib
 matplotlib.use('Agg')
-
-from PIL import Image
+import matplotlib.pyplot as plt
+import matplotlib.image as mpimg
 
 
 class handler(BaseHTTPRequestHandler):
@@ -55,37 +55,65 @@ class handler(BaseHTTPRequestHandler):
                 fig = mod.render(spec.get('data'), spec.get('params', {}))
                 rendered.append(fig_to_bytes(fig, 'png', dpi))
 
-            cols    = max(1, int(layout.get('gridCols', 2)))
-            gap_cm  = float(layout.get('gap', 0.5))
-            gap_px  = max(0, int(gap_cm * dpi / 2.54))
+            cols   = max(1, int(layout.get('gridCols', 2)))
+            gap_in = float(layout.get('gap', 0.5)) / 2.54   # cm → inches
 
-            imgs = [Image.open(io.BytesIO(b)).convert('RGB') for b in rendered]
-            n    = len(imgs)
-            rows = math.ceil(n / cols)
+            # Load rendered PNGs as float arrays via matplotlib
+            images = [mpimg.imread(io.BytesIO(b)) for b in rendered]
+            n      = len(images)
+            rows   = math.ceil(n / cols)
 
-            col_widths  = [0] * cols
-            row_heights = [0] * rows
-            for i, img in enumerate(imgs):
+            # Image sizes in inches at the target DPI
+            img_w = [img.shape[1] / dpi for img in images]
+            img_h = [img.shape[0] / dpi for img in images]
+
+            # Maximum cell dimensions per column / row
+            col_w = [
+                max((img_w[r * cols + c] for r in range(rows) if r * cols + c < n), default=0.0)
+                for c in range(cols)
+            ]
+            row_h = [
+                max((img_h[r * cols + c] for c in range(cols) if r * cols + c < n), default=0.0)
+                for r in range(rows)
+            ]
+
+            fig_w = sum(col_w) + gap_in * (cols + 1)
+            fig_h = sum(row_h) + gap_in * (rows + 1)
+
+            compose_fig = plt.figure(figsize=(fig_w, fig_h), facecolor='white')
+
+            for i, img in enumerate(images):
                 r, c = divmod(i, cols)
-                col_widths[c]  = max(col_widths[c],  img.width)
-                row_heights[r] = max(row_heights[r], img.height)
 
-            total_w = sum(col_widths)  + gap_px * (cols + 1)
-            total_h = sum(row_heights) + gap_px * (rows + 1)
+                # Cell top-left (inches from figure top-left, y increases downward)
+                cell_x = gap_in * (c + 1) + sum(col_w[:c])
+                cell_y = gap_in * (r + 1) + sum(row_h[:r])
 
-            canvas = Image.new('RGB', (total_w, total_h), 'white')
-            for i, img in enumerate(imgs):
-                r, c = divmod(i, cols)
-                x_base = gap_px * (c + 1) + sum(col_widths[:c])
-                y_base = gap_px * (r + 1) + sum(row_heights[:r])
-                x = x_base + (col_widths[c]  - img.width)  // 2
-                y = y_base + (row_heights[r] - img.height) // 2
-                canvas.paste(img, (x, y))
+                # Centre image within cell
+                off_x = (col_w[c] - img_w[i]) / 2
+                off_y = (row_h[r] - img_h[i]) / 2
 
-            out = io.BytesIO()
-            canvas.save(out, 'PNG', dpi=(dpi, dpi))
-            out.seek(0)
-            b64 = base64.b64encode(out.read()).decode()
+                img_left = cell_x + off_x
+                img_top  = cell_y + off_y
+
+                # matplotlib axes use bottom-left origin, y increasing upward
+                img_bot = fig_h - img_top - img_h[i]
+
+                ax = compose_fig.add_axes([
+                    img_left / fig_w,
+                    img_bot  / fig_h,
+                    img_w[i] / fig_w,
+                    img_h[i] / fig_h,
+                ])
+                ax.imshow(img, interpolation='nearest', aspect='auto')
+                ax.axis('off')
+
+            buf = io.BytesIO()
+            compose_fig.savefig(buf, format=fmt, dpi=dpi,
+                                bbox_inches=None, facecolor='white', edgecolor='none')
+            plt.close(compose_fig)
+            buf.seek(0)
+            b64 = base64.b64encode(buf.read()).decode()
             self._respond(200, {'image': b64})
 
         except ValueError as e:
