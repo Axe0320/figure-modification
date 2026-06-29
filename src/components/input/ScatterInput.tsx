@@ -93,7 +93,7 @@ function SeriesCard({ index, series, canDelete, onApply, onDelete }: SeriesCardP
 }
 
 export default function ScatterInput({ data, onChange }: Props) {
-  const [series, setSeries] = useState(data.series.length > 0 ? data.series : [{ x: [] as number[], y: [] as number[] }])
+  const [series, setSeries] = useState((data.series?.length ?? 0) > 0 ? data.series : [{ x: [] as number[], y: [] as number[] }])
 
   const emit = (next: typeof series) => {
     onChange({ series: next }, makeLabels(next.length))

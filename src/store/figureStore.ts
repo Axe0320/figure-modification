@@ -18,6 +18,31 @@ interface FigureStore {
   initialize:     () => Promise<void>
 }
 
+// Migrate figures saved with old formats (e.g. scatter_plot {x,y} → {series:[{x,y}]})
+function migrateFigures(figures: FigureState[]): FigureState[] {
+  return figures.map((fig) => {
+    if (fig.type === 'scatter_plot') {
+      const d = fig.data as Record<string, unknown>
+      if (!('series' in d)) {
+        const x = (d.x as number[]) ?? []
+        const y = (d.y as number[]) ?? []
+        const p = fig.params as unknown as Record<string, unknown>
+        return {
+          ...fig,
+          data: { series: [{ x, y }] },
+          params: {
+            ...fig.params,
+            colors: [String(p.color ?? '#6C63FF')],
+            legend: ['Series 1'],
+            legend_loc: String(p.legend_loc ?? 'best'),
+          },
+        } as FigureState
+      }
+    }
+    return fig
+  })
+}
+
 export const useFigureStore = create<FigureStore>((set) => ({
   figures: [],
   selectedId: null,
@@ -59,10 +84,11 @@ export const useFigureStore = create<FigureStore>((set) => ({
         loadLayout(),
       ])
       if (savedFigures.length > 0) {
-        const previews = await loadAllPreviews(savedFigures.map((f) => f.id))
+        const migratedFigures = migrateFigures(savedFigures)
+        const previews = await loadAllPreviews(migratedFigures.map((f) => f.id))
         Object.entries(previews).forEach(([id, b64]) => setCachePreview(id, b64))
         set({
-          figures: savedFigures,
+          figures: migratedFigures,
           selectedId: savedFigures[0].id,
           layout: savedLayout ? { ...DEFAULT_COMPOSE_LAYOUT, ...savedLayout } : DEFAULT_COMPOSE_LAYOUT,
           initialized: true,
