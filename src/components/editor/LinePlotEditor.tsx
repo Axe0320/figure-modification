@@ -81,10 +81,10 @@ function LimInput({ label, value, onChange }: { label: string; value: [number, n
         </button>
       </div>
       {enabled && (
-        <div className="flex items-center gap-2">
-          <input type="number" step="any" value={value![0]} onChange={(e) => onChange([Number(e.target.value), value![1]])} className="flex-1 text-sm px-2 py-1" style={inputStyle} placeholder="最小" onFocus={(e) => { e.currentTarget.style.borderColor = '#6C63FF' }} onBlur={(e) => { e.currentTarget.style.borderColor = '#E5E7EB' }} />
-          <span className="text-xs text-gray-400">〜</span>
-          <input type="number" step="any" value={value![1]} onChange={(e) => onChange([value![0], Number(e.target.value)])} className="flex-1 text-sm px-2 py-1" style={inputStyle} placeholder="最大" onFocus={(e) => { e.currentTarget.style.borderColor = '#6C63FF' }} onBlur={(e) => { e.currentTarget.style.borderColor = '#E5E7EB' }} />
+        <div className="grid grid-cols-[1fr_14px_1fr] items-center gap-1">
+          <input type="number" step="any" value={value![0]} onChange={(e) => onChange([Number(e.target.value), value![1]])} className="w-full text-sm px-2 py-1" style={inputStyle} placeholder="最小" onFocus={(e) => { e.currentTarget.style.borderColor = '#6C63FF' }} onBlur={(e) => { e.currentTarget.style.borderColor = '#E5E7EB' }} />
+          <span className="text-xs text-gray-400 text-center">〜</span>
+          <input type="number" step="any" value={value![1]} onChange={(e) => onChange([value![0], Number(e.target.value)])} className="w-full text-sm px-2 py-1" style={inputStyle} placeholder="最大" onFocus={(e) => { e.currentTarget.style.borderColor = '#6C63FF' }} onBlur={(e) => { e.currentTarget.style.borderColor = '#E5E7EB' }} />
         </div>
       )}
     </div>
@@ -167,18 +167,16 @@ export default function LinePlotEditor({ figure, onChange, onReset }: Props) {
                   {/* 系列ごとの色・マーカー */}
                   <div>
                     <label className="block text-xs text-gray-500 mb-1.5">系列の色・マーカー</label>
-                    <div className="space-y-2">
+                    <div className="space-y-3">
                       {Array.from({ length: nSeries }, (_, i) => (
-                        <div key={i}>
-                          <span className="text-xs text-gray-400 mb-1 block">系列 {i + 1}</span>
-                          <div className="flex items-center gap-2">
-                            <HexColorEditor value={p.colors[i] ?? '#6C63FF'} onChange={(c) => setColor(i, c)} />
-                            <div className="flex gap-1 flex-wrap">
-                              {MARKER_OPTIONS.map(({ val, label: lbl }) => (
-                                <button key={val} onClick={() => setMarker(i, val)}
-                                  style={{ ...is((p.markers[i] ?? 'o') === val), padding: '2px 7px', fontSize: 13 }}>{lbl}</button>
-                              ))}
-                            </div>
+                        <div key={i} className="space-y-1.5">
+                          <span className="text-xs text-gray-400 block">系列 {i + 1}</span>
+                          <HexColorEditor value={p.colors[i] ?? '#6C63FF'} onChange={(c) => setColor(i, c)} />
+                          <div className="flex gap-1">
+                            {MARKER_OPTIONS.map(({ val, label: lbl }) => (
+                              <button key={val} onClick={() => setMarker(i, val)}
+                                style={{ ...is((p.markers[i] ?? 'o') === val), padding: '2px 7px', fontSize: 13 }}>{lbl}</button>
+                            ))}
                           </div>
                         </div>
                       ))}

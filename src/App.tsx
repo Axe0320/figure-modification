@@ -60,11 +60,11 @@ const DEFAULT_HEATMAP: HeatmapState = {
 const DEFAULT_BAR: BarChartState = {
   id: 'fig-1',
   type: 'bar_chart',
-  data: { labels: ['A', 'B', 'C', 'D'], values: [4.2, 7.8, 3.1, 6.5] },
+  data: { labels: ['A', 'B', 'C', 'D'], values: [[4.2, 7.8, 3.1, 6.5], [3.5, 6.1, 4.8, 5.2]] },
   params: {
     title: '', fontsize: 12, figsize_cm: [14, 10], dpi: 150,
     xlabel: '', ylabel: '', colors: ['#6C63FF', '#FF6584', '#43CFAA', '#FFB347', '#5BC0EB', '#C879FF'],
-    orientation: 'vertical', legend: [], show_values: false, tick_fontsize: 10,
+    orientation: 'vertical', legend: ['系列1', '系列2'], show_values: false, tick_fontsize: 10,
     bar_width: 0.8, show_grid: false, grid_linestyle: '--',
     legend_loc: 'best', xlim: null, ylim: null, xtick_step: null, ytick_step: null,
     threshold_line: null, threshold_line_color: '#EF4444', threshold_line_style: '--',
@@ -75,12 +75,12 @@ const DEFAULT_BAR: BarChartState = {
 const DEFAULT_LINE: LinePlotState = {
   id: 'fig-1',
   type: 'line_plot',
-  data: { x: [0, 1, 2, 3, 4, 5], y: [0.1, 0.4, 0.9, 1.6, 2.5, 3.6] },
+  data: { x: [0, 1, 2, 3, 4, 5], y: [[0.1, 0.4, 0.9, 1.6, 2.5, 3.6], [0.5, 1.2, 1.8, 2.4, 3.1, 3.8]] },
   params: {
     title: '', fontsize: 12, figsize_cm: [14, 10], dpi: 150,
     xlabel: '', ylabel: '',
     colors: ['#6C63FF', '#FF6584', '#43CFAA', '#FFB347', '#5BC0EB', '#C879FF'],
-    legend: [], markers: ['o', 's', '^', 'D', 'v', 'P'],
+    legend: ['系列1', '系列2'], markers: ['o', 's', '^', 'D', 'v', 'P'],
     linewidth: 1.5, tick_fontsize: 10,
     show_grid: false, grid_linestyle: '--',
     legend_loc: 'best', xlim: null, ylim: null, xtick_step: null, ytick_step: null,

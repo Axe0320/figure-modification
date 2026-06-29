@@ -85,10 +85,10 @@ function LimInput({ label, value, onChange }: {
         </button>
       </div>
       {enabled && (
-        <div className="flex items-center gap-2">
-          <input type="number" step="any" value={value![0]} onChange={(e) => onChange([Number(e.target.value), value![1]])} className="flex-1 text-sm px-2 py-1" style={inputStyle} placeholder="最小" onFocus={(e) => { e.currentTarget.style.borderColor = '#6C63FF' }} onBlur={(e) => { e.currentTarget.style.borderColor = '#E5E7EB' }} />
-          <span className="text-xs text-gray-400">〜</span>
-          <input type="number" step="any" value={value![1]} onChange={(e) => onChange([value![0], Number(e.target.value)])} className="flex-1 text-sm px-2 py-1" style={inputStyle} placeholder="最大" onFocus={(e) => { e.currentTarget.style.borderColor = '#6C63FF' }} onBlur={(e) => { e.currentTarget.style.borderColor = '#E5E7EB' }} />
+        <div className="grid grid-cols-[1fr_14px_1fr] items-center gap-1">
+          <input type="number" step="any" value={value![0]} onChange={(e) => onChange([Number(e.target.value), value![1]])} className="w-full text-sm px-2 py-1" style={inputStyle} placeholder="最小" onFocus={(e) => { e.currentTarget.style.borderColor = '#6C63FF' }} onBlur={(e) => { e.currentTarget.style.borderColor = '#E5E7EB' }} />
+          <span className="text-xs text-gray-400 text-center">〜</span>
+          <input type="number" step="any" value={value![1]} onChange={(e) => onChange([value![0], Number(e.target.value)])} className="w-full text-sm px-2 py-1" style={inputStyle} placeholder="最大" onFocus={(e) => { e.currentTarget.style.borderColor = '#6C63FF' }} onBlur={(e) => { e.currentTarget.style.borderColor = '#E5E7EB' }} />
         </div>
       )}
     </div>
@@ -181,10 +181,10 @@ export default function BarChartEditor({ figure, onChange, onReset }: Props) {
                   {/* 系列ごとの色 */}
                   <div>
                     <label className="block text-xs text-gray-500 mb-1.5">系列の色</label>
-                    <div className="space-y-1.5">
+                    <div className="space-y-2">
                       {Array.from({ length: nSeries }, (_, i) => (
-                        <div key={i} className="flex items-center gap-2">
-                          <span className="text-xs text-gray-400 w-16 shrink-0">系列 {i + 1}</span>
+                        <div key={i} className="space-y-1">
+                          <span className="text-xs text-gray-400 block">系列 {i + 1}</span>
                           <HexColorEditor value={p.colors[i] ?? '#6C63FF'} onChange={(c) => setColor(i, c)} />
                         </div>
                       ))}
@@ -223,7 +223,10 @@ export default function BarChartEditor({ figure, onChange, onReset }: Props) {
                   {/* 閾値線 */}
                   <div>
                     <div className="flex items-center justify-between mb-1">
-                      <label className="text-xs text-gray-500">閾値線</label>
+                      <label className="text-xs text-gray-500">
+                        閾値線
+                        <span className="ml-1 text-gray-400">{p.orientation === 'horizontal' ? '(X軸)' : '(Y軸)'}</span>
+                      </label>
                       <button
                         onClick={() => onChange({ threshold_line: p.threshold_line !== null ? null : 0 })}
                         className="w-8 h-4 rounded-full transition-all relative"
@@ -242,8 +245,8 @@ export default function BarChartEditor({ figure, onChange, onReset }: Props) {
                             onFocus={(e) => { e.currentTarget.style.borderColor = '#6C63FF' }}
                             onBlur={(e) => { e.currentTarget.style.borderColor = '#E5E7EB' }} />
                         </div>
-                        <div className="flex items-center gap-2">
-                          <label className="text-xs text-gray-400 w-12 shrink-0">色</label>
+                        <div className="space-y-1">
+                          <label className="text-xs text-gray-400 block">色</label>
                           <HexColorEditor value={p.threshold_line_color} onChange={(c) => onChange({ threshold_line_color: c })} />
                         </div>
                         <div>
@@ -324,10 +327,10 @@ export default function BarChartEditor({ figure, onChange, onReset }: Props) {
                         </button>
                       </div>
                       {p.bar_colors !== null && (
-                        <div className="space-y-1.5 mt-1">
+                        <div className="space-y-2 mt-1">
                           {figure.data.labels.map((lbl, i) => (
-                            <div key={i} className="flex items-center gap-2">
-                              <span className="text-xs text-gray-400 flex-1 min-w-0 truncate">{lbl || `Bar ${i + 1}`}</span>
+                            <div key={i} className="space-y-1">
+                              <span className="text-xs text-gray-400 block truncate">{lbl || `Bar ${i + 1}`}</span>
                               <HexColorEditor
                                 value={p.bar_colors![i] ?? p.colors[i % p.colors.length]}
                                 onChange={(c) => {
