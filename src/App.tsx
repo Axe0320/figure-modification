@@ -27,6 +27,7 @@ const DEFAULT_FIGURE: ConfusionMatrixState = {
     linecolor: 'black',
     annot_fontsize: 11,
     tick_fontsize: 11,
+    cell_size_cm: null,
   },
 }
 

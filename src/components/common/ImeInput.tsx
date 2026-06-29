@@ -12,6 +12,7 @@ export default function ImeInput({ value, onValueChange, placeholder, className,
   const [local, setLocal] = useState(value)
   const composing = useRef(false)
 
+  // Sync from parent (e.g., reset) only when not in IME composition
   useEffect(() => {
     if (!composing.current) setLocal(value)
   }, [value])
@@ -30,18 +31,25 @@ export default function ImeInput({ value, onValueChange, placeholder, className,
         ...style,
       }}
       onChange={(e) => {
+        // During IME composition: skip — let the browser own the display.
+        // Updating state here causes React to re-render the input, which
+        // resets the IME candidate window and garbles Japanese characters.
+        if (composing.current) return
         setLocal(e.target.value)
-        if (!composing.current) onValueChange(e.target.value)
+        onValueChange(e.target.value)
       }}
       onCompositionStart={() => { composing.current = true }}
       onCompositionEnd={(e) => {
         composing.current = false
-        onValueChange(e.currentTarget.value)
+        const val = e.currentTarget.value
+        setLocal(val)
+        onValueChange(val)
       }}
       onFocus={(e) => { e.currentTarget.style.borderColor = '#6C63FF' }}
       onBlur={(e) => {
         e.currentTarget.style.borderColor = '#E5E7EB'
-        onValueChange(e.currentTarget.value)
+        // Flush any value that may not have been synced
+        if (!composing.current) onValueChange(e.currentTarget.value)
       }}
     />
   )

@@ -25,6 +25,7 @@ export interface ConfusionMatrixParams extends BaseFigureParams {
   linecolor: string
   annot_fontsize: number
   tick_fontsize: number
+  cell_size_cm: number | null
 }
 
 export type ConfusionMatrixState = BaseFigureState & {

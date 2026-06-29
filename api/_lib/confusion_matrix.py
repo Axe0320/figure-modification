@@ -5,14 +5,28 @@ import seaborn as sns
 import numpy as np
 
 
+# Approximate margins (inches) for colorbar, axis labels, title.
+# tight_layout() handles the actual layout; these estimates determine
+# the initial canvas size when the user specifies per-cell dimensions.
+_MARGIN_W_IN = 4.0 / 2.54   # colorbar + y-tick labels + y-label
+_MARGIN_H_IN = 3.0 / 2.54   # title + x-tick labels + x-label
+
+
 def render(data: list, params: dict):
     if not data or not data[0]:
         raise ValueError('data is empty')
     if len(data) != len(data[0]):
         raise ValueError('data must be a square matrix')
 
-    figsize_cm = params.get('figsize_cm', [10, 8])
-    figsize_in = (figsize_cm[0] / 2.54, figsize_cm[1] / 2.54)
+    n = len(data)
+
+    cell_size_cm = params.get('cell_size_cm')
+    if cell_size_cm and float(cell_size_cm) > 0:
+        cell_in = float(cell_size_cm) / 2.54
+        figsize_in = (n * cell_in + _MARGIN_W_IN, n * cell_in + _MARGIN_H_IN)
+    else:
+        figsize_cm = params.get('figsize_cm', [10, 8])
+        figsize_in = (figsize_cm[0] / 2.54, figsize_cm[1] / 2.54)
 
     arr = np.array(data, dtype=float)
     if params.get('normalize'):
@@ -29,11 +43,11 @@ def render(data: list, params: dict):
     else:
         labels = raw_labels
 
-    linewidths    = float(params.get('linewidths', 0.1))
-    linecolor     = params.get('linecolor', 'black')
-    fontsize      = params.get('fontsize', 12)
+    linewidths     = float(params.get('linewidths', 0.1))
+    linecolor      = params.get('linecolor', 'black')
+    fontsize       = params.get('fontsize', 12)
     annot_fontsize = params.get('annot_fontsize', 11)
-    tick_fontsize  = params.get('tick_fontsize', 10)
+    tick_fontsize  = params.get('tick_fontsize', 11)
 
     fig, ax = plt.subplots(figsize=figsize_in)
     sns.heatmap(
