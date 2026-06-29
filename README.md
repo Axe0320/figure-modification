@@ -134,7 +134,7 @@ flowchart TD
     end
 
     subgraph STORE["② 状態管理"]
-        ZU[(Zustand Store\nFigureState[])]:::store
+        ZU[(Zustand Store\nFigureState list)]:::store
         IDB[(IndexedDB\nプレビューキャッシュ)]:::store
     end
 
