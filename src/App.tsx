@@ -293,33 +293,44 @@ export default function App() {
     )
   }
 
-  const subtitle = appMode === 'compose'
-    ? '構成モード'
-    : selectedFigure?.type === 'heatmap' ? 'ヒートマップエディタ' : '混合行列エディタ'
-
   return (
     <div className="min-h-screen flex flex-col bg-[#F8FAFC]">
       {/* Header */}
       <header
-        className="bg-white border-b border-gray-200 px-6 py-3 flex items-center gap-3"
-        style={{ boxShadow: 'var(--shadow-sm)' }}
+        className="bg-white border-b border-gray-200 px-4 flex items-center gap-3"
+        style={{ boxShadow: 'var(--shadow-sm)', height: 52 }}
       >
-        <div className="w-7 h-7 rounded-lg bg-accent flex items-center justify-center">
-          <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
-            <rect x="1" y="1" width="5" height="5" rx="1" fill="white" fillOpacity=".9"/>
-            <rect x="8" y="1" width="5" height="5" rx="1" fill="white" fillOpacity=".6"/>
-            <rect x="1" y="8" width="5" height="5" rx="1" fill="white" fillOpacity=".6"/>
-            <rect x="8" y="8" width="5" height="5" rx="1" fill="white" fillOpacity=".9"/>
-          </svg>
+        {/* ロゴ + タイトル */}
+        <div className="flex items-center gap-2 shrink-0">
+          <div className="w-7 h-7 rounded-lg bg-accent flex items-center justify-center">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <rect x="1" y="1" width="5" height="5" rx="1" fill="white" fillOpacity=".9"/>
+              <rect x="8" y="1" width="5" height="5" rx="1" fill="white" fillOpacity=".6"/>
+              <rect x="1" y="8" width="5" height="5" rx="1" fill="white" fillOpacity=".6"/>
+              <rect x="8" y="8" width="5" height="5" rx="1" fill="white" fillOpacity=".9"/>
+            </svg>
+          </div>
+          <h1 className="text-sm font-bold text-gray-800 leading-none whitespace-nowrap">Figure Modification</h1>
         </div>
-        <div className="flex-1">
-          <h1 className="text-sm font-bold text-gray-800 leading-none">Figure Modification</h1>
-          <p className="text-[11px] text-gray-400 mt-0.5">{subtitle}</p>
-        </div>
+
+        {/* 仕切り */}
+        <div className="w-px self-stretch bg-gray-200 mx-1 shrink-0" />
+
+        {/* 図チップバー（ヘッダー全幅を使う） */}
+        <FigureList
+          figures={figures}
+          selectedId={selectedFigure?.id ?? null}
+          onSelect={setSelectedId}
+          onDelete={handleDeleteFigure}
+          onAdd={handleAddFigure}
+        />
+
+        {/* 仕切り */}
+        <div className="w-px self-stretch bg-gray-200 mx-1 shrink-0" />
 
         {/* Mode toggle */}
         <div
-          className="flex rounded-xl overflow-hidden"
+          className="flex rounded-xl overflow-hidden shrink-0"
           style={{ border: '1px solid #E5E7EB', boxShadow: 'var(--shadow-sm)' }}
         >
           {(['edit', 'compose'] as AppMode[]).map((mode) => (
@@ -347,15 +358,6 @@ export default function App() {
         >
           {appMode === 'edit' ? (
             <>
-              {/* 図リスト（固定） */}
-              <FigureList
-                figures={figures}
-                selectedId={selectedFigure?.id ?? null}
-                onSelect={setSelectedId}
-                onDelete={handleDeleteFigure}
-                onAdd={handleAddFigure}
-              />
-
               {selectedFigure && (
                 <>
                   {/* 図種タブ（固定） */}
