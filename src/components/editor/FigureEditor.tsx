@@ -8,6 +8,7 @@ import SizeEditor from './SizeEditor'
 interface Props {
   figure: ConfusionMatrixState
   onChange: (patch: Partial<ConfusionMatrixParams>) => void
+  onReset: () => void
 }
 
 type Section = 'text' | 'color' | 'label' | 'size'
@@ -19,13 +20,36 @@ const SECTIONS: { key: Section; label: string }[] = [
   { key: 'size',  label: 'サイズ' },
 ]
 
-export default function FigureEditor({ figure, onChange }: Props) {
+export default function FigureEditor({ figure, onChange, onReset }: Props) {
   const [open, setOpen] = useState<Section>('text')
 
   const toggle = (s: Section) => setOpen((prev) => prev === s ? 'text' : s)
 
   return (
     <div className="space-y-1">
+      <div className="flex justify-end mb-2">
+        <button
+          onClick={onReset}
+          className="text-xs px-2 py-1 transition-all"
+          style={{
+            color: '#9CA3AF',
+            border: '1px solid #E5E7EB',
+            borderRadius: 6,
+            background: 'white',
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.color = '#6C63FF'
+            e.currentTarget.style.borderColor = '#C4B5FD'
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.color = '#9CA3AF'
+            e.currentTarget.style.borderColor = '#E5E7EB'
+          }}
+        >
+          リセット
+        </button>
+      </div>
+
       {SECTIONS.map(({ key, label }) => (
         <div
           key={key}

@@ -1,4 +1,5 @@
 import type { ConfusionMatrixParams } from '../../types/figures'
+import ImeInput from '../common/ImeInput'
 
 interface Props {
   params: ConfusionMatrixParams
@@ -31,26 +32,18 @@ export default function LabelEditor({ params, matrixSize, onChange }: Props) {
         <p className="text-xs text-gray-500 font-medium">軸ラベル</p>
         <div>
           <label className="block text-xs text-gray-400 mb-1">x軸（列方向）</label>
-          <input
-            type="text"
+          <ImeInput
             value={params.xlabel}
-            onChange={(e) => onChange({ xlabel: e.target.value })}
+            onValueChange={(xlabel) => onChange({ xlabel })}
             className="w-full text-sm px-2 py-1.5"
-            style={inputStyle}
-            onFocus={(e) => { e.currentTarget.style.borderColor = '#6C63FF' }}
-            onBlur={(e)  => { e.currentTarget.style.borderColor = '#E5E7EB' }}
           />
         </div>
         <div>
           <label className="block text-xs text-gray-400 mb-1">y軸（行方向）</label>
-          <input
-            type="text"
+          <ImeInput
             value={params.ylabel}
-            onChange={(e) => onChange({ ylabel: e.target.value })}
+            onValueChange={(ylabel) => onChange({ ylabel })}
             className="w-full text-sm px-2 py-1.5"
-            style={inputStyle}
-            onFocus={(e) => { e.currentTarget.style.borderColor = '#6C63FF' }}
-            onBlur={(e)  => { e.currentTarget.style.borderColor = '#E5E7EB' }}
           />
         </div>
         <label className="flex items-center gap-2 cursor-pointer">
@@ -66,23 +59,42 @@ export default function LabelEditor({ params, matrixSize, onChange }: Props) {
 
       {/* クラスラベル */}
       <div>
-        <p className="text-xs text-gray-500 font-medium mb-2">クラスラベル</p>
-        <p className="text-xs text-gray-400 mb-2">改行は \n で入力（例: Organic\naccount）</p>
-        <div className="space-y-1.5">
-          {labels.map((label, i) => (
-            <div key={i} className="flex items-center gap-2">
-              <span className="text-xs text-gray-400 w-4">{i}</span>
-              <input
-                type="text"
-                value={label}
-                onChange={(e) => setLabel(i, e.target.value)}
-                className="flex-1 text-sm px-2 py-1"
-                style={inputStyle}
-                onFocus={(e) => { e.currentTarget.style.borderColor = '#6C63FF' }}
-                onBlur={(e)  => { e.currentTarget.style.borderColor = '#E5E7EB' }}
-              />
-            </div>
-          ))}
+        <p className="text-xs text-gray-500 font-medium mb-1">クラスラベル</p>
+        <p className="text-xs text-gray-400 mb-2">
+          改行は{' '}
+          <code className="bg-gray-100 px-1 py-0.5 rounded text-[11px]">\n</code>
+          {' '}で入力 → 入力欄下にプレビュー表示
+        </p>
+        <div className="space-y-2">
+          {labels.map((label, i) => {
+            const lines = label.split('\\n')
+            const hasNewline = lines.length > 1
+            return (
+              <div key={i}>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs text-gray-400 w-4">{i}</span>
+                  <ImeInput
+                    value={label}
+                    onValueChange={(val) => setLabel(i, val)}
+                    className="flex-1 text-sm px-2 py-1"
+                  />
+                </div>
+                {hasNewline && (
+                  <div className="ml-6 mt-1 flex flex-wrap gap-1">
+                    {lines.map((line, li) => (
+                      <span
+                        key={li}
+                        className="text-xs px-1.5 py-0.5 rounded"
+                        style={{ background: '#EEF2FF', color: '#6C63FF' }}
+                      >
+                        {line || '(空)'}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )
+          })}
         </div>
       </div>
 
@@ -120,7 +132,7 @@ export default function LabelEditor({ params, matrixSize, onChange }: Props) {
         <div className="mt-2">
           <label className="block text-xs text-gray-400 mb-1">罫線の色</label>
           <div className="flex gap-2">
-            {['white', 'black', 'gray', 'lightgray'].map((c) => (
+            {['black', 'white', 'gray', 'lightgray'].map((c) => (
               <button
                 key={c}
                 onClick={() => onChange({ linecolor: c })}

@@ -24,9 +24,9 @@ const DEFAULT_FIGURE: ConfusionMatrixState = {
     ylabel: 'True Label',
     xlabel_top: true,
     linewidths: 0.1,
-    linecolor: 'white',
+    linecolor: 'black',
     annot_fontsize: 11,
-    tick_fontsize: 10,
+    tick_fontsize: 11,
   },
 }
 
@@ -69,6 +69,14 @@ export default function App() {
     } else {
       updateFigure(figure.id, (f) => ({ ...f, data } as ConfusionMatrixState))
     }
+  }, [figure, updateFigure])
+
+  const handleReset = useCallback(() => {
+    if (!figure) return
+    updateFigure(figure.id, (f) => ({
+      ...f,
+      params: DEFAULT_FIGURE.params,
+    } as ConfusionMatrixState))
   }, [figure, updateFigure])
 
   const handleParamsChange = useCallback((patch: Partial<ConfusionMatrixParams>) => {
@@ -138,7 +146,7 @@ export default function App() {
             <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">
               パラメータ
             </p>
-            <FigureEditor figure={figure} onChange={handleParamsChange} />
+            <FigureEditor figure={figure} onChange={handleParamsChange} onReset={handleReset} />
           </section>
         </div>
 

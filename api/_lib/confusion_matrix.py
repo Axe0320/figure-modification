@@ -30,7 +30,7 @@ def render(data: list, params: dict):
         labels = raw_labels
 
     linewidths    = float(params.get('linewidths', 0.1))
-    linecolor     = params.get('linecolor', 'white')
+    linecolor     = params.get('linecolor', 'black')
     fontsize      = params.get('fontsize', 12)
     annot_fontsize = params.get('annot_fontsize', 11)
     tick_fontsize  = params.get('tick_fontsize', 10)
