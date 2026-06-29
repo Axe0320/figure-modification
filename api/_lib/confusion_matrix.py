@@ -3,51 +3,22 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import seaborn as sns
 import numpy as np
-import importlib.util
 import os
 
 
 def _setup_japanese_font() -> str:
-    """Try multiple strategies to register a CJK-capable font. Returns font name or 'default'."""
+    """Register the bundled IPAexGothic font with matplotlib."""
     import matplotlib as mpl
+    from matplotlib import font_manager
     mpl.rcParams['axes.unicode_minus'] = False
 
-    # Strategy 1: japanize_matplotlib — registers IPAexGothic automatically
-    try:
-        import japanize_matplotlib  # noqa: F401
+    font_path = os.path.join(os.path.dirname(__file__), 'ipaexg.ttf')
+    if os.path.exists(font_path):
+        font_manager.fontManager.addfont(font_path)
         mpl.rcParams['font.family'] = 'IPAexGothic'
-        return 'IPAexGothic (japanize_matplotlib)'
-    except Exception:
-        pass
+        return 'IPAexGothic (bundled)'
 
-    # Strategy 2: locate the .ttf bundled inside the japanize_matplotlib package
-    # directory even if its __init__.py failed to execute
-    try:
-        spec = importlib.util.find_spec('japanize_matplotlib')
-        if spec and spec.origin:
-            font_path = os.path.join(os.path.dirname(spec.origin), 'ipaexg.ttf')
-            if os.path.exists(font_path):
-                from matplotlib import font_manager
-                font_manager.fontManager.addfont(font_path)
-                mpl.rcParams['font.family'] = 'IPAexGothic'
-                return 'IPAexGothic (direct path)'
-    except Exception:
-        pass
-
-    # Strategy 3: search system fonts for any CJK-capable face
-    try:
-        from matplotlib import font_manager
-        keywords = ['ipa', 'noto', 'gothic', 'mincho', 'cjk', 'meiryo', 'hiragino', 'yu']
-        for fp in font_manager.findSystemFonts():
-            if any(k in os.path.basename(fp).lower() for k in keywords):
-                font_manager.fontManager.addfont(fp)
-                name = font_manager.FontProperties(fname=fp).get_name()
-                mpl.rcParams['font.family'] = name
-                return f'{name} (system)'
-    except Exception:
-        pass
-
-    return 'default (no CJK font found)'
+    return 'default (ipaexg.ttf not found)'
 
 
 # Module-level setup — runs once per process / warm start
