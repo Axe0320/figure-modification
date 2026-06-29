@@ -1,6 +1,7 @@
 import { useRef } from 'react'
 import type { LinePlotData } from '../../types/figures'
 import { parseCsv, toNum } from './DataInput/parseCsv'
+import CsvUploadButton from '../common/CsvUploadButton'
 
 interface Props {
   data: LinePlotData
@@ -66,9 +67,17 @@ export default function LinePlotInput({ data, onChange }: Props) {
       </div>
 
       <div>
-        <p className="text-[10px] text-gray-400 mb-1">
-          CSV / TSV（1列目: x値、残り: y系列値）
-        </p>
+        <div className="flex items-center justify-between mb-1">
+          <p className="text-[10px] text-gray-400">CSV / TSV（1列目: x値、残り: y系列値）</p>
+          <CsvUploadButton onParse={(rows) => {
+            if (rows.length === 0) return
+            let startRow = 0; const sn: string[] = []
+            if (rows.length > 1 && isNaN(toNum(rows[0][0] ?? ''))) { sn.push(...rows[0].slice(1)); startRow = 1 }
+            const dr = rows.slice(startRow); const x = dr.map(r => toNum(r[0] ?? '0')); const ns = (dr[0]?.length ?? 1) - 1
+            if (ns <= 1) onChange({ x, y: dr.map(r => toNum(r[1] ?? '0')) }, sn.length ? sn : undefined)
+            else onChange({ x, y: Array.from({ length: ns }, (_, si) => dr.map(r => toNum(r[si + 1] ?? '0'))) }, sn.length ? sn : undefined)
+          }} />
+        </div>
         <textarea
           ref={pasteRef}
           rows={5}

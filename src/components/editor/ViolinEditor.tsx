@@ -4,6 +4,7 @@ import ImeInput from '../common/ImeInput'
 import SizeEditor from './SizeEditor'
 import HexColorEditor from './HexColorEditor'
 import BracketSection from './BracketSection'
+import { PaletteButtons } from './colorPalettes'
 
 interface Props {
   figure: ViolinState
@@ -132,6 +133,7 @@ export default function ViolinEditor({ figure, onChange, onReset }: Props) {
 
               {key === 'display' && (
                 <>
+                  <PaletteButtons onChange={(colors) => onChange({ colors })} />
                   <div>
                     <label className="block text-xs text-gray-500 mb-1.5">グループごとの色</label>
                     <div className="space-y-2">
@@ -142,6 +144,10 @@ export default function ViolinEditor({ figure, onChange, onReset }: Props) {
                         </div>
                       ))}
                     </div>
+                  </div>
+                  <div>
+                    <label className="block text-xs text-gray-500 mb-1">輪郭色</label>
+                    <HexColorEditor value={p.edgecolor ?? 'black'} onChange={(c) => onChange({ edgecolor: c })} />
                   </div>
                   <div>
                     <label className="block text-xs text-gray-500 mb-1">向き</label>

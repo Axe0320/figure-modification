@@ -3,6 +3,7 @@ import type { ScatterState, ScatterParams } from '../../types/figures'
 import ImeInput from '../common/ImeInput'
 import SizeEditor from './SizeEditor'
 import HexColorEditor from './HexColorEditor'
+import { PaletteButtons } from './colorPalettes'
 
 interface Props {
   figure: ScatterState
@@ -155,6 +156,7 @@ export default function ScatterEditor({ figure, onChange, onReset }: Props) {
               {key === 'display' && (
                 <>
                   {/* 系列ごとの色 */}
+                  <PaletteButtons onChange={(colors) => onChange({ colors })} />
                   <div>
                     <label className="block text-xs text-gray-500 mb-1.5">系列ごとの色</label>
                     <div className="space-y-2">

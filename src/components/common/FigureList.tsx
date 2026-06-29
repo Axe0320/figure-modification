@@ -36,7 +36,7 @@ const TYPE_FULL: Record<FigureType, string> = {
   pr_curve:           'PR曲線',
   learning_curve:     '学習曲線',
   feature_importance: '特徴量重要度',
-  box_plot:           'ボックスプロット',
+  box_plot:           '箱ひげ図',
   violin_plot:        'バイオリンプロット',
   error_bar:          'エラーバー',
 }

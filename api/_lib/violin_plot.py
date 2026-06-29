@@ -16,6 +16,7 @@ def render(data: dict, params: dict):
     labels      = params.get('labels', [f'Group {i+1}' for i in range(n)])
     colors      = params.get('colors', _DEFAULT_COLORS)
     alpha       = float(params.get('alpha', 0.7))
+    edgecolor   = params.get('edgecolor', 'black')
     inner       = params.get('inner', 'box')
     show_mean   = bool(params.get('show_mean', False))
     show_median = bool(params.get('show_median', True))
@@ -36,12 +37,12 @@ def render(data: dict, params: dict):
     for i, pc in enumerate(parts['bodies']):
         pc.set_facecolor(colors[i % len(colors)])
         pc.set_alpha(alpha)
-        pc.set_edgecolor('black')
+        pc.set_edgecolor(edgecolor)
         pc.set_linewidth(0.5)
 
     for key in ('cbars', 'cmins', 'cmaxes', 'cmedians'):
         if key in parts:
-            parts[key].set_color('black')
+            parts[key].set_color(edgecolor)
             parts[key].set_linewidth(1)
 
     positions = list(range(1, n + 1))

@@ -3,6 +3,7 @@ import type { BoxState, BoxParams } from '../../types/figures'
 import ImeInput from '../common/ImeInput'
 import SizeEditor from './SizeEditor'
 import HexColorEditor from './HexColorEditor'
+import { PaletteButtons } from './colorPalettes'
 import BracketSection from './BracketSection'
 
 interface Props {
@@ -132,6 +133,7 @@ export default function BoxEditor({ figure, onChange, onReset }: Props) {
 
               {key === 'display' && (
                 <>
+                  <PaletteButtons onChange={(colors) => onChange({ colors })} />
                   <div>
                     <label className="block text-xs text-gray-500 mb-1.5">グループごとの色</label>
                     <div className="space-y-2">

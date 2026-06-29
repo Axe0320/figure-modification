@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import type { FeatureData } from '../../types/figures'
+import CsvUploadButton from '../common/CsvUploadButton'
 
 interface Props {
   data: FeatureData
@@ -70,9 +71,15 @@ export default function FeatureInput({ data, onChange }: Props) {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-      <p style={{ fontSize: 11, color: '#6B7280', margin: 0 }}>
-        CSV/TSV（1列目: 特徴量名、2列目: 重要度）
-      </p>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <p style={{ fontSize: 11, color: '#6B7280', margin: 0 }}>CSV/TSV（1列目: 特徴量名、2列目: 重要度）</p>
+        <CsvUploadButton onParse={(rows) => {
+          const features: string[] = []; const importances: number[] = []
+          const start = rows.length > 1 && isNaN(Number(rows[0]?.[1]?.trim())) ? 1 : 0
+          rows.slice(start).forEach(r => { if (r.length >= 2) { const v = Number(r[1].trim()); if (!isNaN(v)) { features.push(r[0]); importances.push(v) } } })
+          if (features.length > 0) { const d = { features, importances }; setText(features.map((f, i) => `${f}\t${importances[i]}`).join('\n')); onChange(d) }
+        }} />
+      </div>
       <textarea
         rows={6}
         value={text}

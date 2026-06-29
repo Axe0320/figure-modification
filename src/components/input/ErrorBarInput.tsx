@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react'
 import type { ErrorBarData, ErrorBarSeriesItem } from '../../types/figures'
+import CsvUploadButton from '../common/CsvUploadButton'
 
 interface Props {
   data: ErrorBarData
@@ -91,6 +92,22 @@ export default function ErrorBarInput({ data, onChange }: Props) {
     onChange({ ...data, series: next })
   }, [data, onChange])
 
+  const handleCsv = useCallback((rows: string[][]) => {
+    if (rows.length < 2) return
+    const header = rows[0]
+    const dataRows = rows.slice(1)
+    const labels = dataRows.map((r) => r[0] ?? '')
+    const seriesCount = Math.floor((header.length - 1) / 2)
+    if (seriesCount < 1) return
+    const series: ErrorBarSeriesItem[] = Array.from({ length: seriesCount }, (_, si) => ({
+      name: header[1 + si * 2]?.replace(/\s*(mean|平均)$/i, '') || `Series ${si + 1}`,
+      means:  dataRows.map((r) => parseFloat(r[1 + si * 2] ?? '0') || 0),
+      errors: dataRows.map((r) => parseFloat(r[2 + si * 2] ?? '0') || 0),
+    }))
+    setLabelsRaw(labels.join(', '))
+    onChange({ labels, series })
+  }, [onChange])
+
   const addSeries = () => {
     onChange({ ...data, series: [...data.series, { name: `Series ${data.series.length + 1}`, means: Array(data.labels.length).fill(0), errors: Array(data.labels.length).fill(0) }] })
   }
@@ -102,6 +119,11 @@ export default function ErrorBarInput({ data, onChange }: Props) {
 
   return (
     <div className="space-y-4">
+      <div className="flex items-center justify-between">
+        <span className="text-xs text-gray-400">エラーバーデータ</span>
+        <CsvUploadButton onParse={handleCsv} label="CSVで一括入力" />
+      </div>
+      <p className="text-xs text-gray-400 -mt-3">CSV形式: 1列目=ラベル, 以降=系列名平均・系列名誤差（交互）</p>
       <div>
         <label className="block text-xs text-gray-500 mb-1">グループラベル (カンマ区切り)</label>
         <input

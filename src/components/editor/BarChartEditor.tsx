@@ -3,6 +3,7 @@ import type { BarChartState, BarChartParams } from '../../types/figures'
 import ImeInput from '../common/ImeInput'
 import SizeEditor from './SizeEditor'
 import HexColorEditor from './HexColorEditor'
+import { PaletteButtons } from './colorPalettes'
 
 interface Props {
   figure: BarChartState
@@ -178,6 +179,7 @@ export default function BarChartEditor({ figure, onChange, onReset }: Props) {
                   <Toggle label="値を表示" value={p.show_values} onChange={(v) => onChange({ show_values: v })} />
 
                   {/* 系列ごとの色 */}
+                  <PaletteButtons onChange={(colors) => onChange({ colors })} />
                   <div>
                     <label className="block text-xs text-gray-500 mb-1.5">系列の色</label>
                     <div className="space-y-2">

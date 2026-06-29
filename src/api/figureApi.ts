@@ -52,6 +52,15 @@ export const validate = (fig: FigureState): string | null => {
   return null
 }
 
+export const renderForDownload = async (
+  fig: FigureState,
+  format: OutputFormat,
+): Promise<string> => {
+  const err = validate(fig)
+  if (err) throw new Error(err)
+  return postRender(fig, format)
+}
+
 export const renderAndCache = async (
   fig: FigureState,
   format: OutputFormat = 'png',

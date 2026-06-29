@@ -323,6 +323,7 @@ export interface ViolinParams extends BaseFigureParams {
   orientation: 'vertical' | 'horizontal'
   inner: 'box' | 'stick' | 'none'
   alpha: number
+  edgecolor: string
   show_mean: boolean; show_median: boolean; show_points: boolean
   show_grid: boolean; grid_linestyle: string
   xlim: [number, number] | null; ylim: [number, number] | null

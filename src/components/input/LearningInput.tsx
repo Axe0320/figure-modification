@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import type { LearningData, LearningSeriesItem } from '../../types/figures'
+import CsvUploadButton from '../common/CsvUploadButton'
 
 interface Props {
   data: LearningData
@@ -101,8 +102,26 @@ export default function LearningInput({ data, onChange }: Props) {
     onChange(SAMPLE)
   }
 
+  const handleCsvAll = (rows: string[][]) => {
+    if (rows.length < 2) return
+    const header = rows[0]; const dataRows = rows.slice(1)
+    const epochs = dataRows.map(r => Number(r[0] ?? '0')).filter(n => !isNaN(n))
+    const newSeries: LearningSeriesItem[] = Array.from({ length: header.length - 1 }, (_, si) => ({
+      label: header[si + 1] ?? `Series ${si + 1}`,
+      values: dataRows.map(r => Number(r[si + 1] ?? '0') || 0),
+      axis: 'left' as const,
+    }))
+    setEpochText(epochs.join('\n'))
+    setSeriesUI(newSeries.map(s => ({ label: s.label, axis: s.axis, valuesText: s.values.join('\n') })))
+    onChange({ epochs, series: newSeries })
+  }
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <span style={{ fontSize: 11, color: '#6B7280' }}>CSV: 1列目=epoch, 残り=系列値（1行目ヘッダー）</span>
+        <CsvUploadButton onParse={handleCsvAll} />
+      </div>
       <div style={{ border: '1px solid #E5E7EB', borderRadius: 8, padding: 10, display: 'flex', flexDirection: 'column', gap: 6 }}>
         <label style={{ fontSize: 12, fontWeight: 600, color: '#374151' }}>Epoch列</label>
         <textarea

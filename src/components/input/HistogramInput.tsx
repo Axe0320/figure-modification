@@ -1,5 +1,6 @@
 import { useRef } from 'react'
 import { parseCsv, toNum } from './DataInput/parseCsv'
+import CsvUploadButton from '../common/CsvUploadButton'
 
 interface Props {
   data: number[]
@@ -46,9 +47,13 @@ export default function HistogramInput({ data, onChange }: Props) {
       </div>
 
       <div>
-        <p className="text-[10px] text-gray-400 mb-1">
-          数値を貼り付け（1列または複数行）
-        </p>
+        <div className="flex items-center justify-between mb-1">
+          <p className="text-[10px] text-gray-400">数値を貼り付け（1列または複数行）</p>
+          <CsvUploadButton onParse={(rows) => {
+            const nums = rows.flatMap(r => r.map(toNum)).filter(v => !isNaN(v))
+            if (nums.length > 0) onChange(nums)
+          }} />
+        </div>
         <textarea
           ref={pasteRef}
           rows={5}

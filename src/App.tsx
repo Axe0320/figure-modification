@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type {
-  FigureType, FigureState,
+  FigureType, FigureState, OutputFormat,
   ConfusionMatrixParams, ConfusionMatrixState,
   HeatmapParams,         HeatmapState,
   BarChartParams,        BarChartState,
@@ -18,7 +18,7 @@ import type {
 import { useFigureStore } from './store/figureStore'
 import { getPreview } from './cache/previewCache'
 import { savePreview } from './storage/db'
-import { debouncedRender, renderAndCache, composeAndExport } from './api/figureApi'
+import { debouncedRender, renderAndCache, renderForDownload, composeAndExport } from './api/figureApi'
 import CreateMode from './components/input/CreateMode'
 import HeatmapCreateMode from './components/input/HeatmapCreateMode'
 import BarChartInput from './components/input/BarChartInput'
@@ -264,7 +264,7 @@ const DEFAULT_VIOLIN: ViolinState = {
     labels: ['Group A', 'Group B', 'Group C'],
     colors: ['#6C63FF', '#FF6584', '#43CFAA', '#FFB347', '#5BC0EB', '#C879FF'],
     tick_fontsize: 10, orientation: 'vertical',
-    inner: 'box', alpha: 0.7, show_mean: false, show_median: true, show_points: false,
+    inner: 'box', alpha: 0.7, edgecolor: 'black', show_mean: false, show_median: true, show_points: false,
     show_grid: false, grid_linestyle: '--',
     xlim: null, ylim: null, brackets: [],
   },
@@ -350,11 +350,13 @@ export default function App() {
     setSelectedId, setLayout, reorderFigures, initialize,
   } = useFigureStore()
 
-  const [appMode, setAppMode]     = useState<AppMode>('edit')
-  const [previews, setPreviews]   = useState<Record<string, string>>({})
-  const [loading, setLoading]     = useState(false)
-  const [error, setError]         = useState<string | null>(null)
-  const [exporting, setExporting] = useState(false)
+  const [appMode, setAppMode]           = useState<AppMode>('edit')
+  const [previews, setPreviews]         = useState<Record<string, string>>({})
+  const [loading, setLoading]           = useState(false)
+  const [error, setError]               = useState<string | null>(null)
+  const [exporting, setExporting]       = useState(false)
+  const [downloadFormat, setDownloadFormat] = useState<OutputFormat>('png')
+  const [downloadLoading, setDownloadLoading] = useState(false)
 
   const selectedFigure = figures.find((f) => f.id === selectedId) ?? figures[0] ?? null
 
@@ -613,14 +615,32 @@ export default function App() {
   const handleErrorBarReset = makeReset(DEFAULT_ERRORBAR)
 
   // ----------------------------------------------------- download
-  const handleDownload = () => {
+  const handleDownload = async () => {
     if (!selectedFigure) return
-    const b64 = previews[selectedFigure.id]
-    if (!b64) return
-    const a = document.createElement('a')
-    a.href = `data:image/png;base64,${b64}`
-    a.download = `${selectedFigure.params.title || 'figure'}.png`
-    a.click()
+    if (downloadFormat === 'png') {
+      const b64 = previews[selectedFigure.id]
+      if (!b64) return
+      const a = document.createElement('a')
+      a.href = `data:image/png;base64,${b64}`
+      a.download = `${selectedFigure.params.title || 'figure'}.png`
+      a.click()
+    } else {
+      setDownloadLoading(true)
+      try {
+        const b64 = await renderForDownload(selectedFigure, downloadFormat)
+        const mimeTypes: Record<string, string> = {
+          svg: 'image/svg+xml', pdf: 'application/pdf', eps: 'application/postscript',
+        }
+        const a = document.createElement('a')
+        a.href = `data:${mimeTypes[downloadFormat]};base64,${b64}`
+        a.download = `${selectedFigure.params.title || 'figure'}.${downloadFormat}`
+        a.click()
+      } catch (e) {
+        setError(e instanceof Error ? e.message : String(e))
+      } finally {
+        setDownloadLoading(false)
+      }
+    }
   }
 
   // ----------------------------------------------------- compose export
@@ -857,6 +877,9 @@ export default function App() {
               b64={selectedFigure ? (previews[selectedFigure.id] ?? null) : null}
               loading={loading}
               error={error}
+              format={downloadFormat}
+              downloadLoading={downloadLoading}
+              onFormatChange={setDownloadFormat}
               onDownload={handleDownload}
             />
           ) : (

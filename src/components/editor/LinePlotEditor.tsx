@@ -3,6 +3,7 @@ import type { LinePlotState, LinePlotParams } from '../../types/figures'
 import ImeInput from '../common/ImeInput'
 import SizeEditor from './SizeEditor'
 import HexColorEditor from './HexColorEditor'
+import { PaletteButtons } from './colorPalettes'
 
 interface Props {
   figure: LinePlotState
@@ -167,6 +168,7 @@ export default function LinePlotEditor({ figure, onChange, onReset }: Props) {
                   <Slider label="線の太さ" value={p.linewidth} min={0.5} max={5} step={0.5} onChange={(v) => onChange({ linewidth: v })} />
 
                   {/* 系列ごとの色・マーカー */}
+                  <PaletteButtons onChange={(colors) => onChange({ colors })} />
                   <div>
                     <label className="block text-xs text-gray-500 mb-1.5">系列の色・マーカー</label>
                     <div className="space-y-3">

@@ -5,7 +5,7 @@
 | リポジトリ | 本番URL | バックエンド |
 |---|---|---|
 | latex-table-composer | https://latex-table-composer.vercel.app/ | なし（フロントエンドのみ） |
-| latex-figure-composer | （Vercel デプロイ済み） | なし（フロントエンドのみ） |
+| latex-figure-composer |https://latex-figure-composer.vercel.app/ | なし（フロントエンドのみ） |
 | citation-bibtex-converter | https://citation-bibtex-converter.vercel.app/ | なし（フロントエンドのみ） |
 | figure-modification | （本リポジトリ） | Vercel Functions（Python） |
 

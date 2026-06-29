@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react'
+import CsvUploadButton from '../common/CsvUploadButton'
 
 interface Props {
   groups: number[][]
@@ -39,6 +40,16 @@ export default function GroupDataInput({ groups, labels, onChange }: Props) {
     onChange(nextGroups, nextLabels)
   }
 
+  const handleCsv = useCallback((rows: string[][]) => {
+    if (rows.length < 2) return
+    const newLabels = rows[0]
+    const newGroups = newLabels.map((_, ci) =>
+      rows.slice(1).map((row) => parseFloat(row[ci] ?? '')).filter((v) => !isNaN(v))
+    )
+    setRawValues(newGroups.map((g) => g.join(', ')))
+    onChange(newGroups, newLabels)
+  }, [onChange])
+
   const removeGroup = (i: number) => {
     if (groups.length <= 1) return
     const nextGroups = groups.filter((_, idx) => idx !== i)
@@ -49,6 +60,11 @@ export default function GroupDataInput({ groups, labels, onChange }: Props) {
 
   return (
     <div className="space-y-3">
+      <div className="flex items-center justify-between">
+        <span className="text-xs text-gray-400">グループデータ</span>
+        <CsvUploadButton onParse={handleCsv} label="CSVで一括入力" />
+      </div>
+      <p className="text-xs text-gray-400 -mt-2">CSV形式: 1行目=グループ名, 2行目以降=数値（列=グループ）</p>
       {groups.map((_, i) => (
         <div key={i} className="p-3 rounded-xl" style={{ border: '1px solid #E5E7EB', background: '#FAFAFA' }}>
           <div className="flex items-center justify-between mb-2 gap-2">

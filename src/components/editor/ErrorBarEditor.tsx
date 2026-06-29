@@ -3,6 +3,7 @@ import type { ErrorBarState, ErrorBarParams, BracketItem } from '../../types/fig
 import ImeInput from '../common/ImeInput'
 import SizeEditor from './SizeEditor'
 import HexColorEditor from './HexColorEditor'
+import { PaletteButtons } from './colorPalettes'
 
 interface Props {
   figure: ErrorBarState
@@ -198,6 +199,7 @@ export default function ErrorBarEditor({ figure, onChange, onReset }: Props) {
 
               {key === 'display' && (
                 <>
+                  <PaletteButtons onChange={(colors) => onChange({ colors })} />
                   <div>
                     <label className="block text-xs text-gray-500 mb-1.5">系列ごとの色</label>
                     <div className="space-y-2">
