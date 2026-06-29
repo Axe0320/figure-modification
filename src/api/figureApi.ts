@@ -36,7 +36,7 @@ export const validate = (fig: FigureState): string | null => {
       if (!fig.data.x.length) return 'データを入力してください'
       break
     case 'scatter_plot':
-      if (!fig.data.x.length) return 'データを入力してください'
+      if (!fig.data.series.length) return 'データを入力してください'
       break
     case 'histogram':
       if (!fig.data.length) return 'データを入力してください'

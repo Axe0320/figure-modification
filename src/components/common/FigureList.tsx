@@ -11,24 +11,33 @@ interface Props {
 }
 
 const TYPE_LABEL: Record<FigureType, string> = {
-  confusion_matrix: 'CM',
-  heatmap:          'HM',
-  bar_chart:        'Bar',
-  line_plot:        'Line',
-  scatter_plot:     'Scat',
-  histogram:        'Hist',
+  confusion_matrix:   'CM',
+  heatmap:            'HM',
+  bar_chart:          'Bar',
+  line_plot:          'Line',
+  scatter_plot:       'Scat',
+  histogram:          'Hist',
+  roc_curve:          'ROC',
+  pr_curve:           'PR',
+  learning_curve:     'Lrn',
+  feature_importance: 'Feat',
 }
 const TYPE_FULL: Record<FigureType, string> = {
-  confusion_matrix: '混合行列',
-  heatmap:          'ヒートマップ',
-  bar_chart:        '棒グラフ',
-  line_plot:        '折れ線',
-  scatter_plot:     '散布図',
-  histogram:        'ヒストグラム',
+  confusion_matrix:   '混合行列',
+  heatmap:            'ヒートマップ',
+  bar_chart:          '棒グラフ',
+  line_plot:          '折れ線',
+  scatter_plot:       '散布図',
+  histogram:          'ヒストグラム',
+  roc_curve:          'ROC曲線',
+  pr_curve:           'PR曲線',
+  learning_curve:     '学習曲線',
+  feature_importance: '特徴量重要度',
 }
 
 const ALL_TYPES: FigureType[] = [
   'confusion_matrix', 'heatmap', 'bar_chart', 'line_plot', 'scatter_plot', 'histogram',
+  'roc_curve', 'pr_curve', 'learning_curve', 'feature_importance',
 ]
 
 export default function FigureList({ figures, selectedId, onSelect, onDelete, onAdd, onDuplicate }: Props) {

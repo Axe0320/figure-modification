@@ -1,12 +1,12 @@
 import { useState } from 'react'
-import type { ScatterState, ScatterParams } from '../../types/figures'
+import type { RocState, RocParams } from '../../types/figures'
 import ImeInput from '../common/ImeInput'
 import SizeEditor from './SizeEditor'
 import HexColorEditor from './HexColorEditor'
 
 interface Props {
-  figure: ScatterState
-  onChange: (patch: Partial<ScatterParams>) => void
+  figure: RocState
+  onChange: (patch: Partial<RocParams>) => void
   onReset: () => void
 }
 
@@ -23,8 +23,7 @@ const LEGEND_LOCS = [
   { val: 'upper left', label: '左上' }, { val: 'lower right', label: '右下' },
   { val: 'lower left', label: '左下' }, { val: 'outside', label: '外側' },
 ]
-
-const GRID_STYLES = [
+const LINE_STYLES = [
   { val: '--', label: '破線' }, { val: '-', label: '実線' },
   { val: ':', label: '点線' }, { val: '-.', label: '一点鎖' },
 ]
@@ -87,27 +86,10 @@ function LimInput({ label, value, onChange }: { label: string; value: [number, n
   )
 }
 
-function StepInput({ label, value, onChange }: { label: string; value: number | null; onChange: (v: number | null) => void }) {
-  const enabled = value !== null
-  return (
-    <div>
-      <div className="flex items-center justify-between mb-1">
-        <label className="text-xs text-gray-500">{label}</label>
-        <button onClick={() => onChange(enabled ? null : 1)} className="w-8 h-4 rounded-full transition-all relative" style={{ background: enabled ? '#6C63FF' : '#D1D5DB' }}>
-          <span className="absolute top-0.5 w-3 h-3 rounded-full bg-white transition-all shadow-sm" style={{ left: enabled ? '1rem' : '0.125rem' }} />
-        </button>
-      </div>
-      {enabled && (
-        <input type="number" min={0} step="any" value={value!} onChange={(e) => { const v = Number(e.target.value); if (v > 0) onChange(v) }} className="w-full text-sm px-2 py-1" style={inputStyle} onFocus={(e) => { e.currentTarget.style.borderColor = '#6C63FF' }} onBlur={(e) => { e.currentTarget.style.borderColor = '#E5E7EB' }} />
-      )}
-    </div>
-  )
-}
-
-export default function ScatterEditor({ figure, onChange, onReset }: Props) {
+export default function RocEditor({ figure, onChange, onReset }: Props) {
   const [open, setOpen] = useState<Section>('text')
   const p = figure.params
-  const nSeries = figure.data.series.length
+  const nSeries = figure.data.fpr.length
 
   const setColor = (i: number, color: string) => {
     const next = [...p.colors]; while (next.length <= i) next.push('#6C63FF')
@@ -142,9 +124,9 @@ export default function ScatterEditor({ figure, onChange, onReset }: Props) {
                   <div><label className="block text-xs text-gray-500 mb-1">タイトル</label>
                     <ImeInput value={p.title} onValueChange={(v) => onChange({ title: v })} placeholder="タイトルなし" className="w-full text-sm px-3 py-1.5" /></div>
                   <div><label className="block text-xs text-gray-500 mb-1">X軸ラベル</label>
-                    <ImeInput value={p.xlabel} onValueChange={(v) => onChange({ xlabel: v })} placeholder="X軸" className="w-full text-sm px-3 py-1.5" /></div>
+                    <ImeInput value={p.xlabel} onValueChange={(v) => onChange({ xlabel: v })} placeholder="False Positive Rate" className="w-full text-sm px-3 py-1.5" /></div>
                   <div><label className="block text-xs text-gray-500 mb-1">Y軸ラベル</label>
-                    <ImeInput value={p.ylabel} onValueChange={(v) => onChange({ ylabel: v })} placeholder="Y軸" className="w-full text-sm px-3 py-1.5" /></div>
+                    <ImeInput value={p.ylabel} onValueChange={(v) => onChange({ ylabel: v })} placeholder="True Positive Rate" className="w-full text-sm px-3 py-1.5" /></div>
                   <Slider label="フォントサイズ" value={p.fontsize} min={8} max={24} unit="pt" onChange={(v) => onChange({ fontsize: v })} />
                   <Slider label="目盛りサイズ" value={p.tick_fontsize} min={6} max={20} unit="pt" onChange={(v) => onChange({ tick_fontsize: v })} />
                 </>
@@ -152,46 +134,53 @@ export default function ScatterEditor({ figure, onChange, onReset }: Props) {
 
               {key === 'display' && (
                 <>
-                  {/* 系列ごとの色 */}
                   <div>
-                    <label className="block text-xs text-gray-500 mb-1.5">系列ごとの色</label>
+                    <label className="block text-xs text-gray-500 mb-1.5">系列の色</label>
                     <div className="space-y-2">
                       {Array.from({ length: nSeries }, (_, i) => (
                         <div key={i} className="space-y-1">
-                          <span className="text-xs text-gray-400 block">系列 {i + 1}</span>
+                          <span className="text-xs text-gray-400 block">
+                            {p.legend[i] ?? `Class ${i}`}
+                          </span>
                           <HexColorEditor value={p.colors[i] ?? '#6C63FF'} onChange={(c) => setColor(i, c)} />
                         </div>
                       ))}
                     </div>
                   </div>
-
-                  <Slider label="点のサイズ" value={p.marker_size} min={10} max={300} step={10} onChange={(v) => onChange({ marker_size: v })} />
+                  <Slider label="線の太さ" value={p.linewidth} min={0.5} max={5} step={0.5} onChange={(v) => onChange({ linewidth: v })} />
+                  <Toggle label="AUC値を凡例に表示" value={p.show_auc_in_legend} onChange={(v) => onChange({ show_auc_in_legend: v })} />
                   <div>
-                    <label className="block text-xs text-gray-500 mb-1">透明度 (alpha)</label>
-                    <div className="flex items-center gap-2">
-                      <input type="range" min={0.1} max={1} step={0.05} value={p.alpha} onChange={(e) => onChange({ alpha: Number(e.target.value) })} className="flex-1 accent-[#6C63FF]" />
-                      <span className="text-xs text-gray-600 w-10 text-right">{p.alpha.toFixed(2)}</span>
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="text-xs text-gray-500">対角線（チャンスライン）</label>
+                      <button onClick={() => onChange({ show_diagonal: !p.show_diagonal })} className="w-8 h-4 rounded-full transition-all relative" style={{ background: p.show_diagonal ? '#6C63FF' : '#D1D5DB' }}>
+                        <span className="absolute top-0.5 w-3 h-3 rounded-full bg-white transition-all shadow-sm" style={{ left: p.show_diagonal ? '1rem' : '0.125rem' }} />
+                      </button>
+                    </div>
+                    {p.show_diagonal && (
+                      <div className="space-y-2 mt-1">
+                        <div className="flex gap-1.5 flex-wrap">
+                          {LINE_STYLES.map(({ val, label: lbl }) => (
+                            <button key={val} onClick={() => onChange({ diagonal_style: val })} style={is(p.diagonal_style === val)}>{lbl}</button>
+                          ))}
+                        </div>
+                        <HexColorEditor value={p.diagonal_color} onChange={(c) => onChange({ diagonal_color: c })} />
+                      </div>
+                    )}
+                  </div>
+                  <div>
+                    <label className="block text-xs text-gray-500 mb-1.5">凡例の位置</label>
+                    <div className="flex flex-wrap gap-1">
+                      {LEGEND_LOCS.map(({ val, label: lbl }) => (
+                        <button key={val} onClick={() => onChange({ legend_loc: val })} style={is(p.legend_loc === val)}>{lbl}</button>
+                      ))}
                     </div>
                   </div>
-
-                  {/* 凡例位置 */}
-                  {nSeries > 1 && (
-                    <div>
-                      <label className="block text-xs text-gray-500 mb-1.5">凡例の位置</label>
-                      <div className="flex flex-wrap gap-1">
-                        {LEGEND_LOCS.map(({ val, label: lbl }) => (
-                          <button key={val} onClick={() => onChange({ legend_loc: val })} style={is(p.legend_loc === val)}>{lbl}</button>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
                   <Toggle label="グリッド線" value={p.show_grid} onChange={(v) => onChange({ show_grid: v })} />
                   {p.show_grid && (
                     <div>
                       <label className="block text-xs text-gray-500 mb-1">グリッドスタイル</label>
                       <div className="flex gap-1.5 flex-wrap">
-                        {GRID_STYLES.map(({ val, label: lbl }) => (
+                        {LINE_STYLES.map(({ val, label: lbl }) => (
                           <button key={val} onClick={() => onChange({ grid_linestyle: val })} style={is(p.grid_linestyle === val)}>{lbl}</button>
                         ))}
                       </div>
@@ -204,8 +193,6 @@ export default function ScatterEditor({ figure, onChange, onReset }: Props) {
                 <>
                   <LimInput label="X軸範囲" value={p.xlim} onChange={(v) => onChange({ xlim: v })} />
                   <LimInput label="Y軸範囲" value={p.ylim} onChange={(v) => onChange({ ylim: v })} />
-                  <StepInput label="X目盛間隔" value={p.xtick_step} onChange={(v) => onChange({ xtick_step: v })} />
-                  <StepInput label="Y目盛間隔" value={p.ytick_step} onChange={(v) => onChange({ ytick_step: v })} />
                 </>
               )}
 

@@ -5,6 +5,10 @@ export type FigureType =
   | 'line_plot'
   | 'scatter_plot'
   | 'histogram'
+  | 'roc_curve'
+  | 'pr_curve'
+  | 'learning_curve'
+  | 'feature_importance'
 
 export type OutputFormat = 'png' | 'svg' | 'pdf' | 'eps'
 
@@ -71,7 +75,6 @@ export type HeatmapState = BaseFigureState & {
 // ------------------------------------------------------------------ Phase 4
 
 // bar_chart
-// data.values: number[] = single series, number[][] = grouped (outer=series, inner=category)
 export type BarChartData = { labels: string[]; values: number[] | number[][] }
 
 export interface BarChartParams extends BaseFigureParams {
@@ -90,7 +93,6 @@ export interface BarChartParams extends BaseFigureParams {
   ylim: [number, number] | null
   xtick_step: number | null
   ytick_step: number | null
-  // threshold features
   threshold_line: number | null
   threshold_line_color: string
   threshold_line_style: string
@@ -107,7 +109,6 @@ export type BarChartState = BaseFigureState & {
 }
 
 // line_plot
-// data.y: number[] = single series, number[][] = multiple (outer=series, inner=x-point)
 export type LinePlotData = { x: number[]; y: number[] | number[][] }
 
 export interface LinePlotParams extends BaseFigureParams {
@@ -135,13 +136,16 @@ export type LinePlotState = BaseFigureState & {
   params: LinePlotParams
 }
 
-// scatter_plot
-export type ScatterData = { x: number[]; y: number[] }
+// scatter_plot — multi-series
+export type ScatterSeriesItem = { x: number[]; y: number[] }
+export type ScatterData = { series: ScatterSeriesItem[] }
 
 export interface ScatterParams extends BaseFigureParams {
   xlabel: string
   ylabel: string
-  color: string
+  colors: string[]
+  legend: string[]
+  legend_loc: string
   marker_size: number
   alpha: number
   tick_fontsize: number
@@ -179,6 +183,111 @@ export type HistogramState = BaseFigureState & {
   params: HistogramParams
 }
 
+// ------------------------------------------------------------------ Phase 5
+
+// roc_curve
+export type RocData = { fpr: number[][], tpr: number[][], auc: number[] }
+
+export interface RocParams extends BaseFigureParams {
+  xlabel: string
+  ylabel: string
+  colors: string[]
+  legend: string[]
+  linewidth: number
+  tick_fontsize: number
+  show_diagonal: boolean
+  diagonal_style: string
+  diagonal_color: string
+  show_auc_in_legend: boolean
+  legend_loc: string
+  show_grid: boolean
+  grid_linestyle: string
+  xlim: [number, number] | null
+  ylim: [number, number] | null
+}
+
+export type RocState = BaseFigureState & {
+  type: 'roc_curve'
+  data: RocData
+  params: RocParams
+}
+
+// pr_curve
+export type PrData = { precision: number[][], recall: number[][], ap: number[] }
+
+export interface PrParams extends BaseFigureParams {
+  xlabel: string
+  ylabel: string
+  colors: string[]
+  legend: string[]
+  linewidth: number
+  tick_fontsize: number
+  show_ap_in_legend: boolean
+  legend_loc: string
+  show_grid: boolean
+  grid_linestyle: string
+  xlim: [number, number] | null
+  ylim: [number, number] | null
+}
+
+export type PrState = BaseFigureState & {
+  type: 'pr_curve'
+  data: PrData
+  params: PrParams
+}
+
+// learning_curve
+export type LearningSeriesItem = { label: string; values: number[]; axis: 'left' | 'right' }
+export type LearningData = { epochs: number[]; series: LearningSeriesItem[] }
+
+export interface LearningParams extends BaseFigureParams {
+  xlabel: string
+  ylabel_left: string
+  ylabel_right: string
+  colors: string[]
+  markers: string[]
+  linewidth: number
+  tick_fontsize: number
+  legend_loc: string
+  show_grid: boolean
+  grid_linestyle: string
+  xlim: [number, number] | null
+  ylim_left: [number, number] | null
+  ylim_right: [number, number] | null
+  xtick_step: number | null
+}
+
+export type LearningState = BaseFigureState & {
+  type: 'learning_curve'
+  data: LearningData
+  params: LearningParams
+}
+
+// feature_importance
+export type FeatureData = { features: string[]; importances: number[] }
+
+export interface FeatureParams extends BaseFigureParams {
+  xlabel: string
+  ylabel: string
+  color: string
+  top_n: number | null
+  sort: boolean
+  show_values: boolean
+  orientation: 'vertical' | 'horizontal'
+  bar_width: number
+  tick_fontsize: number
+  show_grid: boolean
+  grid_linestyle: string
+  xlim: [number, number] | null
+  ylim: [number, number] | null
+}
+
+export type FeatureState = BaseFigureState & {
+  type: 'feature_importance'
+  data: FeatureData
+  params: FeatureParams
+}
+
 // ------------------------------------------------------------------ union
 export type FigureState =
   | ConfusionMatrixState
@@ -187,6 +296,10 @@ export type FigureState =
   | LinePlotState
   | ScatterState
   | HistogramState
+  | RocState
+  | PrState
+  | LearningState
+  | FeatureState
 
 // ------------------------------------------------------------------ compose
 

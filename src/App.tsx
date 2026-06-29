@@ -7,6 +7,10 @@ import type {
   LinePlotParams,        LinePlotState,
   ScatterParams,         ScatterState,
   HistogramParams,       HistogramState,
+  RocParams,             RocState,
+  PrParams,              PrState,
+  LearningParams,        LearningState,
+  FeatureParams,         FeatureState,
 } from './types/figures'
 import { useFigureStore } from './store/figureStore'
 import { getPreview } from './cache/previewCache'
@@ -18,12 +22,20 @@ import BarChartInput from './components/input/BarChartInput'
 import LinePlotInput from './components/input/LinePlotInput'
 import ScatterInput from './components/input/ScatterInput'
 import HistogramInput from './components/input/HistogramInput'
+import RocInput from './components/input/RocInput'
+import PrInput from './components/input/PrInput'
+import LearningInput from './components/input/LearningInput'
+import FeatureInput from './components/input/FeatureInput'
 import FigureEditor from './components/editor/FigureEditor'
 import HeatmapEditor from './components/editor/HeatmapEditor'
 import BarChartEditor from './components/editor/BarChartEditor'
 import LinePlotEditor from './components/editor/LinePlotEditor'
 import ScatterEditor from './components/editor/ScatterEditor'
 import HistogramEditor from './components/editor/HistogramEditor'
+import RocEditor from './components/editor/RocEditor'
+import PrEditor from './components/editor/PrEditor'
+import LearningEditor from './components/editor/LearningEditor'
+import FeatureEditor from './components/editor/FeatureEditor'
 import FigurePreview from './components/preview/FigurePreview'
 import FigureList from './components/common/FigureList'
 import ComposeSettings from './components/compose/ComposeSettings'
@@ -91,13 +103,104 @@ const DEFAULT_LINE: LinePlotState = {
 const DEFAULT_SCATTER: ScatterState = {
   id: 'fig-1',
   type: 'scatter_plot',
-  data: { x: [1,2,3,4,5,6,7,8], y: [1.2,2.5,2.8,4.1,4.9,6.2,6.8,8.3] },
+  data: {
+    series: [
+      { x: [1,2,3,4,5,6,7,8], y: [1.2,2.5,2.8,4.1,4.9,6.2,6.8,8.3] },
+      { x: [1,2,3,4,5,6,7,8], y: [2.1,3.5,4.2,5.0,5.8,7.1,7.5,9.0] },
+    ],
+  },
   params: {
     title: '', fontsize: 12, figsize_cm: [12, 10], dpi: 150,
-    xlabel: '', ylabel: '', color: '#6C63FF',
+    xlabel: '', ylabel: '',
+    colors: ['#6C63FF', '#FF6584', '#43CFAA', '#FFB347', '#5BC0EB', '#C879FF'],
+    legend: ['Group A', 'Group B'], legend_loc: 'best',
     marker_size: 40, alpha: 0.7, tick_fontsize: 10,
     show_grid: false, grid_linestyle: '--',
     xlim: null, ylim: null, xtick_step: null, ytick_step: null,
+  },
+}
+
+const DEFAULT_ROC: RocState = {
+  id: 'fig-1',
+  type: 'roc_curve',
+  data: {
+    fpr: [[0,0.05,0.10,0.20,0.30,0.50,1.0], [0,0.10,0.20,0.40,0.60,0.80,1.0]],
+    tpr: [[0,0.40,0.70,0.85,0.90,0.95,1.0], [0,0.30,0.60,0.75,0.85,0.92,1.0]],
+    auc: [0.912, 0.847],
+  },
+  params: {
+    title: '', fontsize: 12, figsize_cm: [12, 10], dpi: 150,
+    xlabel: 'False Positive Rate', ylabel: 'True Positive Rate',
+    colors: ['#6C63FF', '#FF6584', '#43CFAA', '#FFB347', '#5BC0EB', '#C879FF'],
+    legend: ['Class A', 'Class B'],
+    linewidth: 1.5, tick_fontsize: 10,
+    show_diagonal: true, diagonal_style: '--', diagonal_color: '#9CA3AF',
+    show_auc_in_legend: true,
+    legend_loc: 'lower right',
+    show_grid: true, grid_linestyle: '--',
+    xlim: null, ylim: null,
+  },
+}
+
+const DEFAULT_PR: PrState = {
+  id: 'fig-1',
+  type: 'pr_curve',
+  data: {
+    precision: [[1.0,0.95,0.88,0.80,0.70,0.50], [1.0,0.90,0.80,0.70,0.60,0.40]],
+    recall:    [[0.0,0.10,0.30,0.50,0.70,1.00], [0.0,0.15,0.35,0.55,0.75,1.00]],
+    ap: [0.876, 0.742],
+  },
+  params: {
+    title: '', fontsize: 12, figsize_cm: [12, 10], dpi: 150,
+    xlabel: 'Recall', ylabel: 'Precision',
+    colors: ['#6C63FF', '#FF6584', '#43CFAA', '#FFB347', '#5BC0EB', '#C879FF'],
+    legend: ['Class A', 'Class B'],
+    linewidth: 1.5, tick_fontsize: 10,
+    show_ap_in_legend: true,
+    legend_loc: 'upper right',
+    show_grid: true, grid_linestyle: '--',
+    xlim: null, ylim: null,
+  },
+}
+
+const DEFAULT_LEARNING: LearningState = {
+  id: 'fig-1',
+  type: 'learning_curve',
+  data: {
+    epochs: [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15],
+    series: [
+      { label: 'Train loss',      values: [0.80,0.42,0.25,0.18,0.14,0.11,0.09,0.08,0.07,0.07,0.06,0.06,0.05,0.05,0.05], axis: 'left'  },
+      { label: 'Val accuracy',    values: [0.68,0.75,0.79,0.82,0.84,0.85,0.86,0.87,0.87,0.88,0.88,0.89,0.89,0.89,0.90], axis: 'right' },
+    ],
+  },
+  params: {
+    title: '', fontsize: 12, figsize_cm: [14, 10], dpi: 150,
+    xlabel: 'Epoch', ylabel_left: 'Loss', ylabel_right: 'Accuracy',
+    colors: ['#EF4444', '#3B82F6', '#43CFAA', '#FFB347', '#5BC0EB', '#C879FF'],
+    markers: ['none', 'none', '^', 'D', 'v', 'P'],
+    linewidth: 1.5, tick_fontsize: 10,
+    legend_loc: 'best',
+    show_grid: true, grid_linestyle: '--',
+    xlim: null, ylim_left: null, ylim_right: null, xtick_step: null,
+  },
+}
+
+const DEFAULT_FEATURE: FeatureState = {
+  id: 'fig-1',
+  type: 'feature_importance',
+  data: {
+    features:    ['Feature A','Feature B','Feature C','Feature D','Feature E','Feature F','Feature G','Feature H'],
+    importances: [0.25, 0.18, 0.15, 0.12, 0.10, 0.08, 0.07, 0.05],
+  },
+  params: {
+    title: '', fontsize: 12, figsize_cm: [14, 10], dpi: 150,
+    xlabel: 'Importance', ylabel: '',
+    color: '#6C63FF',
+    top_n: null, sort: true, show_values: true,
+    orientation: 'horizontal',
+    bar_width: 0.7, tick_fontsize: 10,
+    show_grid: true, grid_linestyle: '--',
+    xlim: null, ylim: null,
   },
 }
 
@@ -115,21 +218,29 @@ const DEFAULT_HISTOGRAM: HistogramState = {
 }
 
 const FIGURE_TYPES: { type: FigureType; label: string }[] = [
-  { type: 'confusion_matrix', label: '混合行列' },
-  { type: 'heatmap',          label: 'ヒートマップ' },
-  { type: 'bar_chart',        label: '棒グラフ' },
-  { type: 'line_plot',        label: '折れ線' },
-  { type: 'scatter_plot',     label: '散布図' },
-  { type: 'histogram',        label: 'ヒストグラム' },
+  { type: 'confusion_matrix',   label: '混合行列' },
+  { type: 'heatmap',            label: 'ヒートマップ' },
+  { type: 'bar_chart',          label: '棒グラフ' },
+  { type: 'line_plot',          label: '折れ線' },
+  { type: 'scatter_plot',       label: '散布図' },
+  { type: 'histogram',          label: 'ヒストグラム' },
+  { type: 'roc_curve',          label: 'ROC曲線' },
+  { type: 'pr_curve',           label: 'PR曲線' },
+  { type: 'learning_curve',     label: '学習曲線' },
+  { type: 'feature_importance', label: '特徴量重要度' },
 ]
 
 const DEFAULT_BY_TYPE: Record<FigureType, FigureState> = {
-  confusion_matrix: DEFAULT_CM,
-  heatmap:          DEFAULT_HEATMAP,
-  bar_chart:        DEFAULT_BAR,
-  line_plot:        DEFAULT_LINE,
-  scatter_plot:     DEFAULT_SCATTER,
-  histogram:        DEFAULT_HISTOGRAM,
+  confusion_matrix:   DEFAULT_CM,
+  heatmap:            DEFAULT_HEATMAP,
+  bar_chart:          DEFAULT_BAR,
+  line_plot:          DEFAULT_LINE,
+  scatter_plot:       DEFAULT_SCATTER,
+  histogram:          DEFAULT_HISTOGRAM,
+  roc_curve:          DEFAULT_ROC,
+  pr_curve:           DEFAULT_PR,
+  learning_curve:     DEFAULT_LEARNING,
+  feature_importance: DEFAULT_FEATURE,
 }
 
 const genId = () => `fig-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`
@@ -259,12 +370,16 @@ export default function App() {
       } as unknown as FigureState))
     }, [selectedFigure, updateFigure])
 
-  const handleCMParamsChange     = makeParamsHandler<ConfusionMatrixParams>('confusion_matrix')
-  const handleHMParamsChange     = makeParamsHandler<HeatmapParams>('heatmap')
-  const handleBarParamsChange    = makeParamsHandler<BarChartParams>('bar_chart')
-  const handleLineParamsChange   = makeParamsHandler<LinePlotParams>('line_plot')
-  const handleScatterParamsChange = makeParamsHandler<ScatterParams>('scatter_plot')
-  const handleHistParamsChange   = makeParamsHandler<HistogramParams>('histogram')
+  const handleCMParamsChange       = makeParamsHandler<ConfusionMatrixParams>('confusion_matrix')
+  const handleHMParamsChange       = makeParamsHandler<HeatmapParams>('heatmap')
+  const handleBarParamsChange      = makeParamsHandler<BarChartParams>('bar_chart')
+  const handleLineParamsChange     = makeParamsHandler<LinePlotParams>('line_plot')
+  const handleScatterParamsChange  = makeParamsHandler<ScatterParams>('scatter_plot')
+  const handleHistParamsChange     = makeParamsHandler<HistogramParams>('histogram')
+  const handleRocParamsChange      = makeParamsHandler<RocParams>('roc_curve')
+  const handlePrParamsChange       = makeParamsHandler<PrParams>('pr_curve')
+  const handleLearningParamsChange = makeParamsHandler<LearningParams>('learning_curve')
+  const handleFeatureParamsChange  = makeParamsHandler<FeatureParams>('feature_importance')
 
   // ----------------------------------------------------- data handlers
   const handleCMDataChange = useCallback((data: number[][]) => {
@@ -308,9 +423,41 @@ export default function App() {
     })
   }, [selectedFigure, updateFigure])
 
-  const handleScatterDataChange = useCallback((data: ScatterState['data']) => {
+  const handleScatterDataChange = useCallback((data: ScatterState['data'], seriesLabels?: string[]) => {
     if (!selectedFigure || selectedFigure.type !== 'scatter_plot') return
-    updateFigure(selectedFigure.id, (f) => ({ ...f, data } as ScatterState))
+    updateFigure(selectedFigure.id, (f) => {
+      const next = { ...f, data } as ScatterState
+      if (seriesLabels) next.params = { ...next.params, legend: seriesLabels }
+      return next
+    })
+  }, [selectedFigure, updateFigure])
+
+  const handleRocDataChange = useCallback((data: RocState['data'], seriesLabels?: string[]) => {
+    if (!selectedFigure || selectedFigure.type !== 'roc_curve') return
+    updateFigure(selectedFigure.id, (f) => {
+      const next = { ...f, data } as RocState
+      if (seriesLabels) next.params = { ...next.params, legend: seriesLabels }
+      return next
+    })
+  }, [selectedFigure, updateFigure])
+
+  const handlePrDataChange = useCallback((data: PrState['data'], seriesLabels?: string[]) => {
+    if (!selectedFigure || selectedFigure.type !== 'pr_curve') return
+    updateFigure(selectedFigure.id, (f) => {
+      const next = { ...f, data } as PrState
+      if (seriesLabels) next.params = { ...next.params, legend: seriesLabels }
+      return next
+    })
+  }, [selectedFigure, updateFigure])
+
+  const handleLearningDataChange = useCallback((data: LearningState['data']) => {
+    if (!selectedFigure || selectedFigure.type !== 'learning_curve') return
+    updateFigure(selectedFigure.id, (f) => ({ ...f, data } as LearningState))
+  }, [selectedFigure, updateFigure])
+
+  const handleFeatureDataChange = useCallback((data: FeatureState['data']) => {
+    if (!selectedFigure || selectedFigure.type !== 'feature_importance') return
+    updateFigure(selectedFigure.id, (f) => ({ ...f, data } as FeatureState))
   }, [selectedFigure, updateFigure])
 
   const handleHistDataChange = useCallback((data: number[]) => {
@@ -325,12 +472,16 @@ export default function App() {
       updateFigure(selectedFigure.id, (f) => ({ ...f, params: def.params } as unknown as FigureState))
     }, [selectedFigure, updateFigure])
 
-  const handleCMReset      = makeReset(DEFAULT_CM)
-  const handleHMReset      = makeReset(DEFAULT_HEATMAP)
-  const handleBarReset     = makeReset(DEFAULT_BAR)
-  const handleLineReset    = makeReset(DEFAULT_LINE)
-  const handleScatterReset = makeReset(DEFAULT_SCATTER)
-  const handleHistReset    = makeReset(DEFAULT_HISTOGRAM)
+  const handleCMReset       = makeReset(DEFAULT_CM)
+  const handleHMReset       = makeReset(DEFAULT_HEATMAP)
+  const handleBarReset      = makeReset(DEFAULT_BAR)
+  const handleLineReset     = makeReset(DEFAULT_LINE)
+  const handleScatterReset  = makeReset(DEFAULT_SCATTER)
+  const handleHistReset     = makeReset(DEFAULT_HISTOGRAM)
+  const handleRocReset      = makeReset(DEFAULT_ROC)
+  const handlePrReset       = makeReset(DEFAULT_PR)
+  const handleLearningReset = makeReset(DEFAULT_LEARNING)
+  const handleFeatureReset  = makeReset(DEFAULT_FEATURE)
 
   // ----------------------------------------------------- download
   const handleDownload = () => {
@@ -473,6 +624,18 @@ export default function App() {
                       {selectedFigure.type === 'histogram' && (
                         <HistogramInput data={(selectedFigure as HistogramState).data} onChange={handleHistDataChange} />
                       )}
+                      {selectedFigure.type === 'roc_curve' && (
+                        <RocInput data={(selectedFigure as RocState).data} onChange={handleRocDataChange} />
+                      )}
+                      {selectedFigure.type === 'pr_curve' && (
+                        <PrInput data={(selectedFigure as PrState).data} onChange={handlePrDataChange} />
+                      )}
+                      {selectedFigure.type === 'learning_curve' && (
+                        <LearningInput data={(selectedFigure as LearningState).data} onChange={handleLearningDataChange} />
+                      )}
+                      {selectedFigure.type === 'feature_importance' && (
+                        <FeatureInput data={(selectedFigure as FeatureState).data} onChange={handleFeatureDataChange} />
+                      )}
                     </section>
 
                     <section className="p-4">
@@ -494,6 +657,18 @@ export default function App() {
                       )}
                       {selectedFigure.type === 'histogram' && (
                         <HistogramEditor figure={selectedFigure as HistogramState} onChange={handleHistParamsChange} onReset={handleHistReset} />
+                      )}
+                      {selectedFigure.type === 'roc_curve' && (
+                        <RocEditor figure={selectedFigure as RocState} onChange={handleRocParamsChange} onReset={handleRocReset} />
+                      )}
+                      {selectedFigure.type === 'pr_curve' && (
+                        <PrEditor figure={selectedFigure as PrState} onChange={handlePrParamsChange} onReset={handlePrReset} />
+                      )}
+                      {selectedFigure.type === 'learning_curve' && (
+                        <LearningEditor figure={selectedFigure as LearningState} onChange={handleLearningParamsChange} onReset={handleLearningReset} />
+                      )}
+                      {selectedFigure.type === 'feature_importance' && (
+                        <FeatureEditor figure={selectedFigure as FeatureState} onChange={handleFeatureParamsChange} onReset={handleFeatureReset} />
                       )}
                     </section>
                   </div>
