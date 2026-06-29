@@ -2,7 +2,7 @@ import { useState } from 'react'
 import type { BarChartState, BarChartParams } from '../../types/figures'
 import ImeInput from '../common/ImeInput'
 import SizeEditor from './SizeEditor'
-import ColorEditor from './ColorEditor'
+import HexColorEditor from './HexColorEditor'
 
 interface Props {
   figure: BarChartState
@@ -185,7 +185,7 @@ export default function BarChartEditor({ figure, onChange, onReset }: Props) {
                       {Array.from({ length: nSeries }, (_, i) => (
                         <div key={i} className="flex items-center gap-2">
                           <span className="text-xs text-gray-400 w-16 shrink-0">系列 {i + 1}</span>
-                          <ColorEditor value={p.colors[i] ?? '#6C63FF'} onChange={(c) => setColor(i, c)} />
+                          <HexColorEditor value={p.colors[i] ?? '#6C63FF'} onChange={(c) => setColor(i, c)} />
                         </div>
                       ))}
                     </div>
@@ -244,7 +244,7 @@ export default function BarChartEditor({ figure, onChange, onReset }: Props) {
                         </div>
                         <div className="flex items-center gap-2">
                           <label className="text-xs text-gray-400 w-12 shrink-0">色</label>
-                          <ColorEditor value={p.threshold_line_color} onChange={(c) => onChange({ threshold_line_color: c })} />
+                          <HexColorEditor value={p.threshold_line_color} onChange={(c) => onChange({ threshold_line_color: c })} />
                         </div>
                         <div>
                           <label className="text-xs text-gray-400 block mb-1">スタイル</label>
@@ -328,7 +328,7 @@ export default function BarChartEditor({ figure, onChange, onReset }: Props) {
                           {figure.data.labels.map((lbl, i) => (
                             <div key={i} className="flex items-center gap-2">
                               <span className="text-xs text-gray-400 flex-1 min-w-0 truncate">{lbl || `Bar ${i + 1}`}</span>
-                              <ColorEditor
+                              <HexColorEditor
                                 value={p.bar_colors![i] ?? p.colors[i % p.colors.length]}
                                 onChange={(c) => {
                                   const next = [...(p.bar_colors!)]

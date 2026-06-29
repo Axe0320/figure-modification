@@ -2,7 +2,7 @@ import { useState } from 'react'
 import type { ScatterState, ScatterParams } from '../../types/figures'
 import ImeInput from '../common/ImeInput'
 import SizeEditor from './SizeEditor'
-import ColorEditor from './ColorEditor'
+import HexColorEditor from './HexColorEditor'
 
 interface Props {
   figure: ScatterState
@@ -141,7 +141,7 @@ export default function ScatterEditor({ figure, onChange, onReset }: Props) {
               {key === 'display' && (
                 <>
                   <div><label className="block text-xs text-gray-500 mb-1">点の色</label>
-                    <ColorEditor value={p.color} onChange={(c) => onChange({ color: c })} /></div>
+                    <HexColorEditor value={p.color} onChange={(c) => onChange({ color: c })} /></div>
                   <Slider label="点のサイズ" value={p.marker_size} min={10} max={300} step={10} onChange={(v) => onChange({ marker_size: v })} />
                   <div>
                     <label className="block text-xs text-gray-500 mb-1">透明度 (alpha)</label>

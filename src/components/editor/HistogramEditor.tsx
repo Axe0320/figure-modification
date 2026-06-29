@@ -2,7 +2,7 @@ import { useState } from 'react'
 import type { HistogramState, HistogramParams } from '../../types/figures'
 import ImeInput from '../common/ImeInput'
 import SizeEditor from './SizeEditor'
-import ColorEditor from './ColorEditor'
+import HexColorEditor from './HexColorEditor'
 
 interface Props {
   figure: HistogramState
@@ -142,7 +142,7 @@ export default function HistogramEditor({ figure, onChange, onReset }: Props) {
                 <>
                   <Slider label="ビン数" value={p.bins} min={5} max={100} step={5} onChange={(v) => onChange({ bins: v })} />
                   <div><label className="block text-xs text-gray-500 mb-1">バーの色</label>
-                    <ColorEditor value={p.color} onChange={(color) => onChange({ color })} /></div>
+                    <HexColorEditor value={p.color} onChange={(color) => onChange({ color })} /></div>
                   <Toggle label="密度表示 (density)" value={p.density} onChange={(v) => onChange({ density: v })} />
                   <Toggle label="グリッド線" value={p.show_grid} onChange={(v) => onChange({ show_grid: v })} />
                   {p.show_grid && (

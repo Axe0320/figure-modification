@@ -2,7 +2,7 @@ import { useState } from 'react'
 import type { LinePlotState, LinePlotParams } from '../../types/figures'
 import ImeInput from '../common/ImeInput'
 import SizeEditor from './SizeEditor'
-import ColorEditor from './ColorEditor'
+import HexColorEditor from './HexColorEditor'
 
 interface Props {
   figure: LinePlotState
@@ -172,7 +172,7 @@ export default function LinePlotEditor({ figure, onChange, onReset }: Props) {
                         <div key={i}>
                           <span className="text-xs text-gray-400 mb-1 block">系列 {i + 1}</span>
                           <div className="flex items-center gap-2">
-                            <ColorEditor value={p.colors[i] ?? '#6C63FF'} onChange={(c) => setColor(i, c)} />
+                            <HexColorEditor value={p.colors[i] ?? '#6C63FF'} onChange={(c) => setColor(i, c)} />
                             <div className="flex gap-1 flex-wrap">
                               {MARKER_OPTIONS.map(({ val, label: lbl }) => (
                                 <button key={val} onClick={() => setMarker(i, val)}

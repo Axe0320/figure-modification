@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type {
-  FigureType,
+  FigureType, FigureState,
   ConfusionMatrixParams, ConfusionMatrixState,
   HeatmapParams,         HeatmapState,
   BarChartParams,        BarChartState,
@@ -123,13 +123,13 @@ const FIGURE_TYPES: { type: FigureType; label: string }[] = [
   { type: 'histogram',        label: 'ヒストグラム' },
 ]
 
-const DEFAULT_BY_TYPE: Record<FigureType, typeof DEFAULT_CM> = {
+const DEFAULT_BY_TYPE: Record<FigureType, FigureState> = {
   confusion_matrix: DEFAULT_CM,
   heatmap:          DEFAULT_HEATMAP,
-  bar_chart:        DEFAULT_BAR as never,
-  line_plot:        DEFAULT_LINE as never,
-  scatter_plot:     DEFAULT_SCATTER as never,
-  histogram:        DEFAULT_HISTOGRAM as never,
+  bar_chart:        DEFAULT_BAR,
+  line_plot:        DEFAULT_LINE,
+  scatter_plot:     DEFAULT_SCATTER,
+  histogram:        DEFAULT_HISTOGRAM,
 }
 
 const genId = () => `fig-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`
@@ -255,8 +255,8 @@ export default function App() {
     useCallback((patch: Partial<T>) => {
       if (!selectedFigure || selectedFigure.type !== type) return
       updateFigure(selectedFigure.id, (f) => ({
-        ...f, params: { ...(f as { params: T }).params, ...patch },
-      }))
+        ...f, params: { ...(f as unknown as { params: T }).params, ...patch },
+      } as unknown as FigureState))
     }, [selectedFigure, updateFigure])
 
   const handleCMParamsChange     = makeParamsHandler<ConfusionMatrixParams>('confusion_matrix')
@@ -319,18 +319,18 @@ export default function App() {
   }, [selectedFigure, updateFigure])
 
   // ----------------------------------------------------- reset handlers
-  const makeReset = (def: typeof DEFAULT_CM) =>
+  const makeReset = (def: FigureState) =>
     useCallback(() => {
       if (!selectedFigure) return
-      updateFigure(selectedFigure.id, (f) => ({ ...f, params: def.params }))
+      updateFigure(selectedFigure.id, (f) => ({ ...f, params: def.params } as unknown as FigureState))
     }, [selectedFigure, updateFigure])
 
   const handleCMReset      = makeReset(DEFAULT_CM)
-  const handleHMReset      = makeReset(DEFAULT_HEATMAP as never)
-  const handleBarReset     = makeReset(DEFAULT_BAR as never)
-  const handleLineReset    = makeReset(DEFAULT_LINE as never)
-  const handleScatterReset = makeReset(DEFAULT_SCATTER as never)
-  const handleHistReset    = makeReset(DEFAULT_HISTOGRAM as never)
+  const handleHMReset      = makeReset(DEFAULT_HEATMAP)
+  const handleBarReset     = makeReset(DEFAULT_BAR)
+  const handleLineReset    = makeReset(DEFAULT_LINE)
+  const handleScatterReset = makeReset(DEFAULT_SCATTER)
+  const handleHistReset    = makeReset(DEFAULT_HISTOGRAM)
 
   // ----------------------------------------------------- download
   const handleDownload = () => {
