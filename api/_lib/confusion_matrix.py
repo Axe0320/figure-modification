@@ -60,6 +60,7 @@ def render(data: list, params: dict):
         linewidths=linewidths,
         linecolor=linecolor,
         annot_kws={'size': annot_fontsize},
+        square=True,
     )
 
     ax.tick_params(axis='both', labelsize=tick_fontsize)
