@@ -1,7 +1,7 @@
 import { debounce } from 'lodash-es'
 import * as Sentry from '@sentry/react'
 import { setPreview } from '../cache/previewCache'
-import type { FigureState, OutputFormat } from '../types/figures'
+import type { FigureState, ComposeLayout, OutputFormat } from '../types/figures'
 
 const postRender = async (fig: FigureState, format: OutputFormat): Promise<string> => {
   const res = await fetch('/api/render', {
@@ -60,3 +60,26 @@ export const debouncedRender = debounce(
   },
   400,
 )
+
+export const composeAndExport = async (
+  figures: FigureState[],
+  layout: ComposeLayout,
+  format: OutputFormat = 'png',
+): Promise<string> => {
+  const dpi = figures[0]?.params.dpi ?? 150
+  const res = await fetch('/api/compose', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      figures: figures.map((f) => ({ type: f.type, data: f.data, params: f.params })),
+      layout: { gridCols: layout.gridCols, gap: layout.gap },
+      output: { format, dpi },
+    }),
+  })
+  if (!res.ok) {
+    const err = await res.json()
+    throw new Error(err.error ?? `HTTP ${res.status}`)
+  }
+  const { image } = await res.json()
+  return image
+}

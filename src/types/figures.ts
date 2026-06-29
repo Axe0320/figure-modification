@@ -60,3 +60,27 @@ export type HeatmapState = BaseFigureState & {
 }
 
 export type FigureState = ConfusionMatrixState | HeatmapState
+
+// ------------------------------------------------------------------ compose
+
+export interface FigurePosition {
+  figureId: string
+  x: number   // free layout: px from canvas origin
+  y: number
+  w: number   // 0 = auto
+  h: number
+}
+
+export interface ComposeLayout {
+  mode: 'grid' | 'free'
+  gridCols: number
+  gap: number   // cm
+  positions: FigurePosition[]
+}
+
+export const DEFAULT_COMPOSE_LAYOUT: ComposeLayout = {
+  mode: 'grid',
+  gridCols: 2,
+  gap: 0.5,
+  positions: [],
+}

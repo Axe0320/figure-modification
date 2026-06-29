@@ -1,26 +1,84 @@
 import { create } from 'zustand'
-import type { FigureState } from '../types/figures'
+import type { FigureState, ComposeLayout } from '../types/figures'
+import { DEFAULT_COMPOSE_LAYOUT } from '../types/figures'
+import { saveFigures, loadFigures, saveLayout, loadLayout, loadAllPreviews } from '../storage/db'
+import { setPreview as setCachePreview } from '../cache/previewCache'
 
 interface FigureStore {
   figures: FigureState[]
   selectedId: string | null
-  addFigure:    (fig: FigureState) => void
-  updateFigure: (id: string, updater: (fig: FigureState) => FigureState) => void
-  removeFigure: (id: string) => void
-  setSelectedId:(id: string | null) => void
+  layout: ComposeLayout
+  initialized: boolean
+  addFigure:      (fig: FigureState) => void
+  updateFigure:   (id: string, updater: (fig: FigureState) => FigureState) => void
+  removeFigure:   (id: string) => void
+  setSelectedId:  (id: string | null) => void
+  setLayout:      (patch: Partial<ComposeLayout>) => void
+  reorderFigures: (fromIdx: number, toIdx: number) => void
+  initialize:     () => Promise<void>
 }
 
 export const useFigureStore = create<FigureStore>((set) => ({
   figures: [],
   selectedId: null,
+  layout: DEFAULT_COMPOSE_LAYOUT,
+  initialized: false,
+
   addFigure: (fig) =>
     set((s) => ({ figures: [...s.figures, fig] })),
+
   updateFigure: (id, updater) =>
     set((s) => ({ figures: s.figures.map((f) => f.id === id ? updater(f) : f) })),
+
   removeFigure: (id) =>
-    set((s) => ({
-      figures: s.figures.filter((f) => f.id !== id),
-      selectedId: s.selectedId === id ? null : s.selectedId,
-    })),
+    set((s) => {
+      const filtered = s.figures.filter((f) => f.id !== id)
+      const newSelected = s.selectedId === id
+        ? (filtered[filtered.length - 1]?.id ?? null)
+        : s.selectedId
+      return { figures: filtered, selectedId: newSelected }
+    }),
+
   setSelectedId: (id) => set({ selectedId: id }),
+
+  setLayout: (patch) =>
+    set((s) => ({ layout: { ...s.layout, ...patch } })),
+
+  reorderFigures: (fromIdx, toIdx) =>
+    set((s) => {
+      const next = [...s.figures]
+      const [moved] = next.splice(fromIdx, 1)
+      next.splice(toIdx, 0, moved)
+      return { figures: next }
+    }),
+
+  initialize: async () => {
+    try {
+      const [savedFigures, savedLayout] = await Promise.all([
+        loadFigures(),
+        loadLayout(),
+      ])
+      if (savedFigures.length > 0) {
+        const previews = await loadAllPreviews(savedFigures.map((f) => f.id))
+        Object.entries(previews).forEach(([id, b64]) => setCachePreview(id, b64))
+        set({
+          figures: savedFigures,
+          selectedId: savedFigures[0].id,
+          layout: savedLayout ?? DEFAULT_COMPOSE_LAYOUT,
+          initialized: true,
+        })
+      } else {
+        set({ initialized: true })
+      }
+    } catch {
+      set({ initialized: true })
+    }
+  },
 }))
+
+// Auto-save to IndexedDB whenever figures or layout change
+useFigureStore.subscribe((state, prev) => {
+  if (!state.initialized) return
+  if (state.figures !== prev.figures) saveFigures(state.figures).catch(() => {})
+  if (state.layout !== prev.layout) saveLayout(state.layout).catch(() => {})
+})
