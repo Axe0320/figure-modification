@@ -1,8 +1,13 @@
 import type { BaseFigureParams } from '../../types/figures'
 
+type ExtendedParams = BaseFigureParams & {
+  annot_fontsize?: number
+  tick_fontsize?: number
+}
+
 interface Props {
-  params: BaseFigureParams
-  onChange: (patch: Partial<BaseFigureParams>) => void
+  params: ExtendedParams
+  onChange: (patch: Partial<ExtendedParams>) => void
 }
 
 const inputStyle: React.CSSProperties = {
@@ -30,7 +35,7 @@ export default function TextEditor({ params, onChange }: Props) {
       </div>
       <div>
         <label className="block text-xs text-gray-500 mb-1">
-          フォントサイズ: {params.fontsize}pt
+          タイトル・軸ラベルサイズ: {params.fontsize}pt
         </label>
         <input
           type="range"
@@ -40,6 +45,34 @@ export default function TextEditor({ params, onChange }: Props) {
           className="w-full accent-[#6C63FF]"
         />
       </div>
+      {params.annot_fontsize !== undefined && (
+        <div>
+          <label className="block text-xs text-gray-500 mb-1">
+            セル内数値サイズ: {params.annot_fontsize}pt
+          </label>
+          <input
+            type="range"
+            min={6} max={24} step={1}
+            value={params.annot_fontsize}
+            onChange={(e) => onChange({ annot_fontsize: Number(e.target.value) })}
+            className="w-full accent-[#6C63FF]"
+          />
+        </div>
+      )}
+      {params.tick_fontsize !== undefined && (
+        <div>
+          <label className="block text-xs text-gray-500 mb-1">
+            クラスラベルサイズ: {params.tick_fontsize}pt
+          </label>
+          <input
+            type="range"
+            min={6} max={24} step={1}
+            value={params.tick_fontsize}
+            onChange={(e) => onChange({ tick_fontsize: Number(e.target.value) })}
+            className="w-full accent-[#6C63FF]"
+          />
+        </div>
+      )}
     </div>
   )
 }

@@ -23,10 +23,17 @@ def render(data: list, params: dict):
         fmt = 'd'
         arr = arr.astype(int)
 
-    labels     = params.get('labels', 'auto')
-    linewidths = float(params.get('linewidths', 0.5))
-    linecolor  = params.get('linecolor', 'white')
-    fontsize   = params.get('fontsize', 12)
+    raw_labels = params.get('labels', 'auto')
+    if isinstance(raw_labels, list):
+        labels = [str(l).replace('\\n', '\n') for l in raw_labels]
+    else:
+        labels = raw_labels
+
+    linewidths    = float(params.get('linewidths', 0.1))
+    linecolor     = params.get('linecolor', 'white')
+    fontsize      = params.get('fontsize', 12)
+    annot_fontsize = params.get('annot_fontsize', 11)
+    tick_fontsize  = params.get('tick_fontsize', 10)
 
     fig, ax = plt.subplots(figsize=figsize_in)
     sns.heatmap(
@@ -39,7 +46,10 @@ def render(data: list, params: dict):
         yticklabels=labels,
         linewidths=linewidths,
         linecolor=linecolor,
+        annot_kws={'size': annot_fontsize},
     )
+
+    ax.tick_params(axis='both', labelsize=tick_fontsize)
     ax.set_title(params.get('title', ''), fontsize=fontsize)
 
     xlabel = params.get('xlabel', 'Predicted Label')

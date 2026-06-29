@@ -23,8 +23,10 @@ const DEFAULT_FIGURE: ConfusionMatrixState = {
     xlabel: 'Predicted Label',
     ylabel: 'True Label',
     xlabel_top: true,
-    linewidths: 0.5,
+    linewidths: 0.1,
     linecolor: 'white',
+    annot_fontsize: 11,
+    tick_fontsize: 10,
   },
 }
 

@@ -90,18 +90,31 @@ export default function LabelEditor({ params, matrixSize, onChange }: Props) {
       <div>
         <p className="text-xs text-gray-500 font-medium mb-2">罫線</p>
         <div>
-          <label className="block text-xs text-gray-400 mb-1">
-            太さ: {params.linewidths}px
-          </label>
-          <input
-            type="range"
-            min={0} max={3} step={0.5}
-            value={params.linewidths}
-            onChange={(e) => onChange({ linewidths: Number(e.target.value) })}
-            className="w-full accent-[#6C63FF]"
-          />
+          <label className="block text-xs text-gray-400 mb-1">太さ (px)</label>
+          <div className="flex items-center gap-2">
+            <input
+              type="range"
+              min={0} max={5} step={0.05}
+              value={params.linewidths}
+              onChange={(e) => onChange({ linewidths: Number(e.target.value) })}
+              className="flex-1 accent-[#6C63FF]"
+            />
+            <input
+              type="number"
+              min={0} max={5} step={0.05}
+              value={params.linewidths}
+              onChange={(e) => {
+                const v = Math.max(0, Math.min(5, Number(e.target.value)))
+                if (!isNaN(v)) onChange({ linewidths: v })
+              }}
+              className="w-16 text-sm text-center px-1 py-1"
+              style={inputStyle}
+              onFocus={(e) => { e.currentTarget.style.borderColor = '#6C63FF' }}
+              onBlur={(e)  => { e.currentTarget.style.borderColor = '#E5E7EB' }}
+            />
+          </div>
           <div className="flex justify-between text-xs text-gray-400 mt-0.5">
-            <span>なし</span><span>太</span>
+            <span>なし (0)</span><span>太 (5)</span>
           </div>
         </div>
         <div className="mt-2">

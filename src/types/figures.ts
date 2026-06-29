@@ -23,6 +23,8 @@ export interface ConfusionMatrixParams extends BaseFigureParams {
   xlabel_top: boolean
   linewidths: number
   linecolor: string
+  annot_fontsize: number
+  tick_fontsize: number
 }
 
 export type ConfusionMatrixState = BaseFigureState & {
