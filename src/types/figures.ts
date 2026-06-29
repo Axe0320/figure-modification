@@ -1,4 +1,11 @@
-export type FigureType = 'confusion_matrix' | 'heatmap'
+export type FigureType =
+  | 'confusion_matrix'
+  | 'heatmap'
+  | 'bar_chart'
+  | 'line_plot'
+  | 'scatter_plot'
+  | 'histogram'
+
 export type OutputFormat = 'png' | 'svg' | 'pdf' | 'eps'
 
 interface BaseFigureState {
@@ -13,6 +20,7 @@ export interface BaseFigureParams {
   dpi: number
 }
 
+// ------------------------------------------------------------------ Phase 1
 export interface ConfusionMatrixParams extends BaseFigureParams {
   colormap: string
   normalize: boolean
@@ -34,6 +42,7 @@ export type ConfusionMatrixState = BaseFigureState & {
   params: ConfusionMatrixParams
 }
 
+// ------------------------------------------------------------------ Phase 2
 export interface HeatmapParams extends BaseFigureParams {
   mode: 'heatmap' | 'correlation'
   colormap: string
@@ -59,23 +68,133 @@ export type HeatmapState = BaseFigureState & {
   params: HeatmapParams
 }
 
-export type FigureState = ConfusionMatrixState | HeatmapState
+// ------------------------------------------------------------------ Phase 4
+
+// bar_chart
+// data.values: number[] = single series, number[][] = grouped (outer=series, inner=category)
+export type BarChartData = { labels: string[]; values: number[] | number[][] }
+
+export interface BarChartParams extends BaseFigureParams {
+  xlabel: string
+  ylabel: string
+  colors: string[]
+  orientation: 'vertical' | 'horizontal'
+  legend: string[]
+  tick_fontsize: number
+  show_values: boolean
+  bar_width: number
+  show_grid: boolean
+  grid_linestyle: string
+  legend_loc: string
+  xlim: [number, number] | null
+  ylim: [number, number] | null
+  xtick_step: number | null
+  ytick_step: number | null
+}
+
+export type BarChartState = BaseFigureState & {
+  type: 'bar_chart'
+  data: BarChartData
+  params: BarChartParams
+}
+
+// line_plot
+// data.y: number[] = single series, number[][] = multiple (outer=series, inner=x-point)
+export type LinePlotData = { x: number[]; y: number[] | number[][] }
+
+export interface LinePlotParams extends BaseFigureParams {
+  xlabel: string
+  ylabel: string
+  colors: string[]
+  legend: string[]
+  markers: string[]
+  linewidth: number
+  tick_fontsize: number
+  show_grid: boolean
+  grid_linestyle: string
+  legend_loc: string
+  xlim: [number, number] | null
+  ylim: [number, number] | null
+  xtick_step: number | null
+  ytick_step: number | null
+  log_scale_x: boolean
+  log_scale_y: boolean
+}
+
+export type LinePlotState = BaseFigureState & {
+  type: 'line_plot'
+  data: LinePlotData
+  params: LinePlotParams
+}
+
+// scatter_plot
+export type ScatterData = { x: number[]; y: number[] }
+
+export interface ScatterParams extends BaseFigureParams {
+  xlabel: string
+  ylabel: string
+  color: string
+  marker_size: number
+  alpha: number
+  tick_fontsize: number
+  show_grid: boolean
+  grid_linestyle: string
+  xlim: [number, number] | null
+  ylim: [number, number] | null
+  xtick_step: number | null
+  ytick_step: number | null
+}
+
+export type ScatterState = BaseFigureState & {
+  type: 'scatter_plot'
+  data: ScatterData
+  params: ScatterParams
+}
+
+// histogram
+export interface HistogramParams extends BaseFigureParams {
+  xlabel: string
+  ylabel: string
+  bins: number
+  color: string
+  density: boolean
+  tick_fontsize: number
+  show_grid: boolean
+  grid_linestyle: string
+  ylim: [number, number] | null
+  ytick_step: number | null
+}
+
+export type HistogramState = BaseFigureState & {
+  type: 'histogram'
+  data: number[]
+  params: HistogramParams
+}
+
+// ------------------------------------------------------------------ union
+export type FigureState =
+  | ConfusionMatrixState
+  | HeatmapState
+  | BarChartState
+  | LinePlotState
+  | ScatterState
+  | HistogramState
 
 // ------------------------------------------------------------------ compose
 
 export interface FigurePosition {
   figureId: string
-  x: number   // free layout: px from canvas origin
+  x: number
   y: number
-  w: number   // 0 = auto
+  w: number
   h: number
 }
 
 export interface ComposeLayout {
   mode: 'grid' | 'free'
   gridCols: number
-  gridRows: number   // 0 = auto (ceil(n/cols))
-  gap: number        // cm
+  gridRows: number
+  gap: number
   positions: FigurePosition[]
 }
 

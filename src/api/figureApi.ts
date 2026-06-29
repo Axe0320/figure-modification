@@ -29,6 +29,18 @@ export const validate = (fig: FigureState): string | null => {
       if (fig.data.some((row) => row.length !== (fig.data[0]?.length ?? 0)))
         return '各行の長さが異なります'
       break
+    case 'bar_chart':
+      if (!fig.data.labels.length) return 'ラベルを入力してください'
+      break
+    case 'line_plot':
+      if (!fig.data.x.length) return 'データを入力してください'
+      break
+    case 'scatter_plot':
+      if (!fig.data.x.length) return 'データを入力してください'
+      break
+    case 'histogram':
+      if (!fig.data.length) return 'データを入力してください'
+      break
   }
   return null
 }

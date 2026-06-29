@@ -11,11 +11,19 @@ interface Props {
 
 const TYPE_LABEL: Record<FigureType, string> = {
   confusion_matrix: 'CM',
-  heatmap: 'HM',
+  heatmap:          'HM',
+  bar_chart:        'Bar',
+  line_plot:        'Line',
+  scatter_plot:     'Scat',
+  histogram:        'Hist',
 }
 const TYPE_FULL: Record<FigureType, string> = {
   confusion_matrix: '混合行列',
-  heatmap: 'ヒートマップ',
+  heatmap:          'ヒートマップ',
+  bar_chart:        '棒グラフ',
+  line_plot:        '折れ線',
+  scatter_plot:     '散布図',
+  histogram:        'ヒストグラム',
 }
 
 export default function FigureList({ figures, selectedId, onSelect, onDelete, onAdd }: Props) {
