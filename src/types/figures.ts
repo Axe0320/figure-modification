@@ -1,4 +1,4 @@
-export type FigureType = 'confusion_matrix'
+export type FigureType = 'confusion_matrix' | 'heatmap'
 export type OutputFormat = 'png' | 'svg' | 'pdf' | 'eps'
 
 interface BaseFigureState {
@@ -34,4 +34,29 @@ export type ConfusionMatrixState = BaseFigureState & {
   params: ConfusionMatrixParams
 }
 
-export type FigureState = ConfusionMatrixState
+export interface HeatmapParams extends BaseFigureParams {
+  mode: 'heatmap' | 'correlation'
+  colormap: string
+  labels_x: string[]
+  labels_y: string[]
+  show_values: boolean
+  fmt: string
+  vmin: number | null
+  vmax: number | null
+  mask_upper: boolean
+  xlabel: string
+  ylabel: string
+  linewidths: number
+  linecolor: string
+  annot_fontsize: number
+  tick_fontsize: number
+  cell_size_cm: number | null
+}
+
+export type HeatmapState = BaseFigureState & {
+  type: 'heatmap'
+  data: number[][]
+  params: HeatmapParams
+}
+
+export type FigureState = ConfusionMatrixState | HeatmapState

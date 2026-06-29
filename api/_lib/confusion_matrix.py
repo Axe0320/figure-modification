@@ -3,29 +3,10 @@ matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 import seaborn as sns
 import numpy as np
-import os
+from _lib.common import setup_japanese_font
 
+setup_japanese_font()
 
-def _setup_japanese_font() -> str:
-    """Register the bundled IPAexGothic font with matplotlib."""
-    import matplotlib as mpl
-    from matplotlib import font_manager
-    mpl.rcParams['axes.unicode_minus'] = False
-
-    font_path = os.path.join(os.path.dirname(__file__), 'ipaexg.ttf')
-    if os.path.exists(font_path):
-        font_manager.fontManager.addfont(font_path)
-        mpl.rcParams['font.family'] = 'IPAexGothic'
-        return 'IPAexGothic (bundled)'
-
-    return 'default (ipaexg.ttf not found)'
-
-
-# Module-level setup — runs once per process / warm start
-_FONT_INFO = _setup_japanese_font()
-
-
-# Approximate margins (inches) for colorbar, axis labels, title.
 _MARGIN_W_IN = 4.0 / 2.54
 _MARGIN_H_IN = 3.0 / 2.54
 
@@ -96,4 +77,4 @@ def render(data: list, params: dict):
         ax.xaxis.set_label_position('top')
 
     fig.tight_layout()
-    return fig, _FONT_INFO
+    return fig

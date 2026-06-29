@@ -1,13 +1,22 @@
 import { useCallback, useEffect, useState } from 'react'
-import type { ConfusionMatrixParams, ConfusionMatrixState } from './types/figures'
+import type {
+  FigureType,
+  ConfusionMatrixParams,
+  ConfusionMatrixState,
+  HeatmapParams,
+  HeatmapState,
+  FigureState,
+} from './types/figures'
 import { useFigureStore } from './store/figureStore'
 import { getPreview } from './cache/previewCache'
 import { debouncedRender, renderAndCache } from './api/figureApi'
 import CreateMode from './components/input/CreateMode'
+import HeatmapCreateMode from './components/input/HeatmapCreateMode'
 import FigureEditor from './components/editor/FigureEditor'
+import HeatmapEditor from './components/editor/HeatmapEditor'
 import FigurePreview from './components/preview/FigurePreview'
 
-const DEFAULT_FIGURE: ConfusionMatrixState = {
+const DEFAULT_CM: ConfusionMatrixState = {
   id: 'fig-1',
   type: 'confusion_matrix',
   data: [[45, 3], [2, 50]],
@@ -31,16 +40,53 @@ const DEFAULT_FIGURE: ConfusionMatrixState = {
   },
 }
 
+const DEFAULT_HEATMAP: HeatmapState = {
+  id: 'fig-1',
+  type: 'heatmap',
+  data: [
+    [1.00, 0.80, 0.30],
+    [0.80, 1.00, 0.50],
+    [0.30, 0.50, 1.00],
+  ],
+  params: {
+    title: '',
+    fontsize: 12,
+    figsize_cm: [12, 10],
+    dpi: 150,
+    mode: 'heatmap',
+    colormap: 'Blues',
+    labels_x: ['A', 'B', 'C'],
+    labels_y: ['A', 'B', 'C'],
+    show_values: true,
+    fmt: '.2f',
+    vmin: null,
+    vmax: null,
+    mask_upper: false,
+    xlabel: '',
+    ylabel: '',
+    linewidths: 0.5,
+    linecolor: 'white',
+    annot_fontsize: 10,
+    tick_fontsize: 10,
+    cell_size_cm: null,
+  },
+}
+
+const FIGURE_TYPES: { type: FigureType; label: string; subtitle: string }[] = [
+  { type: 'confusion_matrix', label: '混合行列',     subtitle: '混合行列エディタ' },
+  { type: 'heatmap',          label: 'ヒートマップ', subtitle: 'ヒートマップエディタ' },
+]
+
 export default function App() {
   const { figures, addFigure, updateFigure } = useFigureStore()
   const [preview, setPreview] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError]     = useState<string | null>(null)
 
-  const figure = (figures[0] as ConfusionMatrixState | undefined) ?? null
+  const figure = (figures[0] as FigureState | undefined) ?? null
 
   useEffect(() => {
-    if (!figures.length) addFigure(DEFAULT_FIGURE)
+    if (!figures.length) addFigure(DEFAULT_CM)
   }, [])
 
   useEffect(() => {
@@ -54,40 +100,6 @@ export default function App() {
       .finally(()  => setLoading(false))
   }, [])
 
-  const handleDataChange = useCallback((data: number[][]) => {
-    if (!figure) return
-    const newN = data.length
-    const oldN = figure.data.length
-    if (newN !== oldN) {
-      const newLabels = Array.from({ length: newN }, (_, i) =>
-        figure.params.labels[i] ?? `Class ${i}`
-      )
-      updateFigure(figure.id, (f) => ({
-        ...f,
-        data,
-        params: { ...(f as ConfusionMatrixState).params, labels: newLabels },
-      } as ConfusionMatrixState))
-    } else {
-      updateFigure(figure.id, (f) => ({ ...f, data } as ConfusionMatrixState))
-    }
-  }, [figure, updateFigure])
-
-  const handleReset = useCallback(() => {
-    if (!figure) return
-    updateFigure(figure.id, (f) => ({
-      ...f,
-      params: DEFAULT_FIGURE.params,
-    } as ConfusionMatrixState))
-  }, [figure, updateFigure])
-
-  const handleParamsChange = useCallback((patch: Partial<ConfusionMatrixParams>) => {
-    if (!figure) return
-    updateFigure(figure.id, (f) => ({
-      ...f,
-      params: { ...(f as ConfusionMatrixState).params, ...patch },
-    } as ConfusionMatrixState))
-  }, [figure, updateFigure])
-
   useEffect(() => {
     if (!figure) return
     setLoading(true)
@@ -95,10 +107,81 @@ export default function App() {
     debouncedRender(
       figure,
       (b64: string) => { setPreview(b64); setLoading(false) },
-      (msg: string) => { setError(msg); setLoading(false) },
+      (msg: string) => { setError(msg);   setLoading(false) },
     )
   }, [figure?.data, figure?.params])
 
+  // ---------------------------------------------------------------- type switch
+  const handleTypeSwitch = useCallback((type: FigureType) => {
+    if (figure?.type === type) return
+    const next = type === 'confusion_matrix' ? DEFAULT_CM : DEFAULT_HEATMAP
+    updateFigure('fig-1', () => next)
+    setPreview(null)
+  }, [figure, updateFigure])
+
+  // ----------------------------------------------------------- confusion matrix
+  const handleCMDataChange = useCallback((data: number[][]) => {
+    if (!figure || figure.type !== 'confusion_matrix') return
+    const newN = data.length
+    const oldN = figure.data.length
+    if (newN !== oldN) {
+      const newLabels = Array.from({ length: newN }, (_, i) =>
+        figure.params.labels[i] ?? `Class ${i}`
+      )
+      updateFigure(figure.id, (f) => ({
+        ...f, data,
+        params: { ...(f as ConfusionMatrixState).params, labels: newLabels },
+      } as ConfusionMatrixState))
+    } else {
+      updateFigure(figure.id, (f) => ({ ...f, data } as ConfusionMatrixState))
+    }
+  }, [figure, updateFigure])
+
+  const handleCMParamsChange = useCallback((patch: Partial<ConfusionMatrixParams>) => {
+    if (!figure || figure.type !== 'confusion_matrix') return
+    updateFigure(figure.id, (f) => ({
+      ...f,
+      params: { ...(f as ConfusionMatrixState).params, ...patch },
+    } as ConfusionMatrixState))
+  }, [figure, updateFigure])
+
+  const handleCMReset = useCallback(() => {
+    if (!figure || figure.type !== 'confusion_matrix') return
+    updateFigure(figure.id, (f) => ({ ...f, params: DEFAULT_CM.params } as ConfusionMatrixState))
+  }, [figure, updateFigure])
+
+  // --------------------------------------------------------------- heatmap
+  const handleHMDataChange = useCallback((
+    data: number[][],
+    extractedLabels?: { x: string[], y: string[] },
+  ) => {
+    if (!figure || figure.type !== 'heatmap') return
+    const newRows = data.length
+    const newCols = data[0]?.length ?? 0
+    const labelsX = extractedLabels?.x ??
+      Array.from({ length: newCols }, (_, i) => figure.params.labels_x[i] ?? `Col ${i}`)
+    const labelsY = extractedLabels?.y ??
+      Array.from({ length: newRows }, (_, i) => figure.params.labels_y[i] ?? `Row ${i}`)
+    updateFigure(figure.id, (f) => ({
+      ...f, data,
+      params: { ...(f as HeatmapState).params, labels_x: labelsX, labels_y: labelsY },
+    } as HeatmapState))
+  }, [figure, updateFigure])
+
+  const handleHMParamsChange = useCallback((patch: Partial<HeatmapParams>) => {
+    if (!figure || figure.type !== 'heatmap') return
+    updateFigure(figure.id, (f) => ({
+      ...f,
+      params: { ...(f as HeatmapState).params, ...patch },
+    } as HeatmapState))
+  }, [figure, updateFigure])
+
+  const handleHMReset = useCallback(() => {
+    if (!figure || figure.type !== 'heatmap') return
+    updateFigure(figure.id, (f) => ({ ...f, params: DEFAULT_HEATMAP.params } as HeatmapState))
+  }, [figure, updateFigure])
+
+  // --------------------------------------------------------------- download
   const handleDownload = () => {
     if (!preview) return
     const a = document.createElement('a')
@@ -108,6 +191,8 @@ export default function App() {
   }
 
   if (!figure) return null
+
+  const currentTypeMeta = FIGURE_TYPES.find((t) => t.type === figure.type) ?? FIGURE_TYPES[0]
 
   return (
     <div className="min-h-screen flex flex-col bg-[#F8FAFC]">
@@ -126,7 +211,7 @@ export default function App() {
         </div>
         <div>
           <h1 className="text-sm font-bold text-gray-800 leading-none">Figure Modification</h1>
-          <p className="text-[11px] text-gray-400 mt-0.5">混合行列エディタ</p>
+          <p className="text-[11px] text-gray-400 mt-0.5">{currentTypeMeta.subtitle}</p>
         </div>
       </header>
 
@@ -136,18 +221,51 @@ export default function App() {
           className="w-80 flex-shrink-0 bg-white flex flex-col overflow-y-auto"
           style={{ borderRight: '1px solid #E5E7EB', boxShadow: '2px 0 8px rgba(0,0,0,.04)' }}
         >
+          {/* 図種選択 */}
+          <div className="flex border-b border-gray-200 px-3 pt-3">
+            {FIGURE_TYPES.map((t) => (
+              <button
+                key={t.type}
+                onClick={() => handleTypeSwitch(t.type)}
+                className="flex-1 py-2 text-xs font-semibold border-b-2 -mb-px transition-colors"
+                style={{
+                  borderBottomColor: figure.type === t.type ? '#6C63FF' : 'transparent',
+                  color: figure.type === t.type ? '#6C63FF' : '#6B7280',
+                }}
+              >
+                {t.label}
+              </button>
+            ))}
+          </div>
+
           <section className="p-4 border-b border-gray-100">
             <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">
               データ入力
             </p>
-            <CreateMode data={figure.data} onDataChange={handleDataChange} />
+            {figure.type === 'confusion_matrix' ? (
+              <CreateMode data={figure.data} onDataChange={handleCMDataChange} />
+            ) : (
+              <HeatmapCreateMode data={figure.data} onDataChange={handleHMDataChange} />
+            )}
           </section>
 
           <section className="p-4">
             <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">
               パラメータ
             </p>
-            <FigureEditor figure={figure} onChange={handleParamsChange} onReset={handleReset} />
+            {figure.type === 'confusion_matrix' ? (
+              <FigureEditor
+                figure={figure as ConfusionMatrixState}
+                onChange={handleCMParamsChange}
+                onReset={handleCMReset}
+              />
+            ) : (
+              <HeatmapEditor
+                figure={figure as HeatmapState}
+                onChange={handleHMParamsChange}
+                onReset={handleHMReset}
+              />
+            )}
           </section>
         </div>
 

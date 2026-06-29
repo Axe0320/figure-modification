@@ -24,6 +24,11 @@ export const validate = (fig: FigureState): string | null => {
       if (fig.data.some((row) => row.length !== fig.data.length))
         return '正方行列を入力してください'
       break
+    case 'heatmap':
+      if (!fig.data.length) return 'データを入力してください'
+      if (fig.data.some((row) => row.length !== (fig.data[0]?.length ?? 0)))
+        return '各行の長さが異なります'
+      break
   }
   return null
 }

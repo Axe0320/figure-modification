@@ -25,7 +25,6 @@ class handler(BaseHTTPRequestHandler):
         params      = body.get('params', {})
         fmt         = body.get('output', {}).get('format', 'png')
 
-        # 安全のため英数字とアンダースコアのみ許可
         if not figure_type.replace('_', '').isalnum():
             self._respond(400, {'error': f'Unknown type: {figure_type}'})
             return
@@ -33,8 +32,6 @@ class handler(BaseHTTPRequestHandler):
         try:
             mod = importlib.import_module(f'_lib.{figure_type}')
         except ModuleNotFoundError as e:
-            # Only treat as "unknown type" when the top-level module itself is missing.
-            # If e.name differs, the module exists but has an internal import error.
             if e.name == f'_lib.{figure_type}':
                 self._respond(400, {'error': f'Unknown type: {figure_type}'})
             else:
@@ -43,18 +40,10 @@ class handler(BaseHTTPRequestHandler):
 
         try:
             from _lib.common import fig_to_bytes
-            result = mod.render(data, params)
-            # render() may return (fig, extra_info) or just fig
-            if isinstance(result, tuple):
-                fig, extra = result[0], result[1]
-            else:
-                fig, extra = result, None
+            fig = mod.render(data, params)
             raw = fig_to_bytes(fig, fmt, params.get('dpi', 150))
             b64 = base64.b64encode(raw).decode()
-            resp = {'image': b64}
-            if extra is not None:
-                resp['debug'] = extra
-            self._respond(200, resp)
+            self._respond(200, {'image': b64})
         except ValueError as e:
             self._respond(400, {'error': str(e)})
         except Exception as e:
