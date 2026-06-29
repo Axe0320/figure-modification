@@ -24,8 +24,15 @@ export default function ColorEditor({ colormap, onChange }: Props) {
       <select
         value={colormap}
         onChange={(e) => onChange(e.target.value)}
-        className="w-full text-sm border border-gray-300 rounded px-3 py-1.5
-          focus:outline-none focus:border-blue-400"
+        className="w-full text-sm px-3 py-1.5"
+        style={{
+          border: '1px solid #E5E7EB',
+          borderRadius: 8,
+          outline: 'none',
+          transition: 'border-color 0.15s',
+        }}
+        onFocus={(e) => { e.currentTarget.style.borderColor = '#6C63FF' }}
+        onBlur={(e)  => { e.currentTarget.style.borderColor = '#E5E7EB' }}
       >
         {COLORMAPS.map((c) => (
           <option key={c.value} value={c.value}>{c.label}</option>

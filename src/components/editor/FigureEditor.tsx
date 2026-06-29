@@ -27,17 +27,33 @@ export default function FigureEditor({ figure, onChange }: Props) {
   return (
     <div className="space-y-1">
       {SECTIONS.map(({ key, label }) => (
-        <div key={key} className="border border-gray-200 rounded-lg overflow-hidden">
+        <div
+          key={key}
+          className="overflow-hidden"
+          style={{
+            border: open === key ? '1px solid #C4B5FD' : '1px solid #E5E7EB',
+            borderRadius: 10,
+            transition: 'border-color 0.15s',
+          }}
+        >
           <button
             onClick={() => toggle(key)}
-            className="w-full flex justify-between items-center px-3 py-2 text-sm font-medium
-              text-gray-700 hover:bg-gray-50 transition-colors"
+            className="w-full flex justify-between items-center px-3 py-2 text-sm font-medium transition-colors"
+            style={{
+              color: open === key ? '#6C63FF' : '#374151',
+              background: open === key ? '#F5F3FF' : 'white',
+            }}
           >
             {label}
-            <span className="text-gray-400">{open === key ? '▲' : '▼'}</span>
+            <span style={{ color: open === key ? '#6C63FF' : '#9CA3AF' }}>
+              {open === key ? '▲' : '▼'}
+            </span>
           </button>
           {open === key && (
-            <div className="px-3 pb-3 pt-1 border-t border-gray-100">
+            <div
+              className="px-3 pb-3 pt-1"
+              style={{ borderTop: '1px solid #EDE9FE' }}
+            >
               {key === 'text'  && (
                 <TextEditor
                   params={figure.params}

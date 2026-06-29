@@ -18,6 +18,11 @@ export interface ConfusionMatrixParams extends BaseFigureParams {
   normalize: boolean
   labels: string[]
   show_values: boolean
+  xlabel: string
+  ylabel: string
+  xlabel_top: boolean
+  linewidths: number
+  linecolor: string
 }
 
 export type ConfusionMatrixState = BaseFigureState & {

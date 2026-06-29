@@ -5,6 +5,13 @@ interface Props {
 
 const SIZES = [2, 3, 4, 5, 6]
 
+const inputStyle: React.CSSProperties = {
+  border: '1px solid #E5E7EB',
+  borderRadius: 8,
+  outline: 'none',
+  transition: 'border-color 0.15s',
+}
+
 export default function ManualInput({ data, onChange }: Props) {
   const n = data.length || 2
 
@@ -26,11 +33,12 @@ export default function ManualInput({ data, onChange }: Props) {
   return (
     <div className="space-y-3">
       <div className="flex items-center gap-2">
-        <span className="text-sm text-gray-600">行列サイズ</span>
+        <span className="text-xs text-gray-500">行列サイズ</span>
         <select
           value={n}
           onChange={(e) => resize(Number(e.target.value))}
-          className="text-sm border border-gray-300 rounded px-2 py-1"
+          className="text-xs px-2 py-1"
+          style={{ border: '1px solid #E5E7EB', borderRadius: 8 }}
         >
           {SIZES.map((s) => (
             <option key={s} value={s}>{s} × {s}</option>
@@ -49,8 +57,10 @@ export default function ManualInput({ data, onChange }: Props) {
                       type="number"
                       value={val}
                       onChange={(e) => setValue(i, j, e.target.value)}
-                      className="w-16 text-center text-sm border border-gray-300 rounded px-1 py-1
-                        focus:outline-none focus:border-blue-400"
+                      className="w-14 text-center text-sm px-1 py-1"
+                      style={inputStyle}
+                      onFocus={(e) => { e.currentTarget.style.borderColor = '#6C63FF' }}
+                      onBlur={(e)  => { e.currentTarget.style.borderColor = '#E5E7EB' }}
                     />
                   </td>
                 ))}

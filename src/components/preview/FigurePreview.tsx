@@ -8,10 +8,20 @@ interface Props {
 export default function FigurePreview({ b64, loading, error, onDownload }: Props) {
   return (
     <div className="flex flex-col h-full">
-      <div className="flex-1 flex items-center justify-center bg-white rounded-lg border border-gray-200 min-h-64 relative">
+      <div
+        className="flex-1 flex items-center justify-center bg-white min-h-64 relative"
+        style={{
+          border: '1px solid #E5E7EB',
+          borderRadius: 14,
+          boxShadow: 'var(--shadow-md)',
+        }}
+      >
         {loading && (
           <div className="flex flex-col items-center gap-2 text-gray-400">
-            <div className="w-8 h-8 border-2 border-gray-300 border-t-blue-500 rounded-full animate-spin" />
+            <div
+              className="w-8 h-8 rounded-full border-2 border-gray-200 animate-spin"
+              style={{ borderTopColor: '#6C63FF' }}
+            />
             <span className="text-sm">生成中...</span>
           </div>
         )}
@@ -22,7 +32,7 @@ export default function FigurePreview({ b64, loading, error, onDownload }: Props
           <img
             src={`data:image/png;base64,${b64}`}
             alt="Generated figure"
-            className="max-w-full max-h-full object-contain"
+            className="max-w-full max-h-full object-contain p-4"
           />
         )}
         {!loading && !error && !b64 && (
@@ -33,8 +43,19 @@ export default function FigurePreview({ b64, loading, error, onDownload }: Props
       <button
         onClick={onDownload}
         disabled={!b64 || loading}
-        className="mt-3 w-full py-2 px-4 bg-blue-600 text-white rounded-lg text-sm font-medium
-          hover:bg-blue-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+        className="mt-3 w-full py-2 px-4 text-white text-sm font-semibold transition-all"
+        style={{
+          background: !b64 || loading ? '#D1D5DB' : '#6C63FF',
+          borderRadius: 14,
+          cursor: !b64 || loading ? 'not-allowed' : 'pointer',
+          boxShadow: !b64 || loading ? 'none' : 'var(--shadow-sm)',
+        }}
+        onMouseEnter={(e) => {
+          if (!(!b64 || loading)) (e.currentTarget as HTMLButtonElement).style.background = '#5a52e0'
+        }}
+        onMouseLeave={(e) => {
+          if (!(!b64 || loading)) (e.currentTarget as HTMLButtonElement).style.background = '#6C63FF'
+        }}
       >
         PNG をダウンロード
       </button>

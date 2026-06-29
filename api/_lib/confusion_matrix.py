@@ -23,6 +23,11 @@ def render(data: list, params: dict):
         fmt = 'd'
         arr = arr.astype(int)
 
+    labels     = params.get('labels', 'auto')
+    linewidths = float(params.get('linewidths', 0.5))
+    linecolor  = params.get('linecolor', 'white')
+    fontsize   = params.get('fontsize', 12)
+
     fig, ax = plt.subplots(figsize=figsize_in)
     sns.heatmap(
         arr,
@@ -30,9 +35,23 @@ def render(data: list, params: dict):
         cmap=params.get('colormap', 'Blues'),
         annot=bool(params.get('show_values', True)),
         fmt=fmt,
-        xticklabels=params.get('labels', 'auto'),
-        yticklabels=params.get('labels', 'auto'),
+        xticklabels=labels,
+        yticklabels=labels,
+        linewidths=linewidths,
+        linecolor=linecolor,
     )
-    ax.set_title(params.get('title', ''), fontsize=params.get('fontsize', 12))
+    ax.set_title(params.get('title', ''), fontsize=fontsize)
+
+    xlabel = params.get('xlabel', 'Predicted Label')
+    ylabel = params.get('ylabel', 'True Label')
+    if xlabel:
+        ax.set_xlabel(xlabel, fontsize=fontsize)
+    if ylabel:
+        ax.set_ylabel(ylabel, fontsize=fontsize)
+
+    if params.get('xlabel_top', True):
+        ax.xaxis.set_ticks_position('top')
+        ax.xaxis.set_label_position('top')
+
     fig.tight_layout()
     return fig
