@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useEffect, useRef } from 'react'
 
 interface Props {
   value: string
@@ -9,18 +9,22 @@ interface Props {
 }
 
 export default function ImeInput({ value, onValueChange, placeholder, className, style }: Props) {
-  const [local, setLocal] = useState(value)
+  const inputRef = useRef<HTMLInputElement>(null)
   const composing = useRef(false)
 
-  // Sync from parent (e.g., reset) only when not in IME composition
+  // Sync external value changes (e.g. reset button) directly into the DOM.
+  // We never set `value={}` on the element so React never fights the IME.
   useEffect(() => {
-    if (!composing.current) setLocal(value)
+    if (inputRef.current && !composing.current) {
+      inputRef.current.value = value
+    }
   }, [value])
 
   return (
     <input
+      ref={inputRef}
       type="text"
-      value={local}
+      defaultValue={value}
       placeholder={placeholder}
       className={className}
       style={{
@@ -30,25 +34,17 @@ export default function ImeInput({ value, onValueChange, placeholder, className,
         transition: 'border-color 0.15s',
         ...style,
       }}
-      onChange={(e) => {
-        // During IME composition: skip — let the browser own the display.
-        // Updating state here causes React to re-render the input, which
-        // resets the IME candidate window and garbles Japanese characters.
-        if (composing.current) return
-        setLocal(e.target.value)
-        onValueChange(e.target.value)
-      }}
       onCompositionStart={() => { composing.current = true }}
       onCompositionEnd={(e) => {
         composing.current = false
-        const val = e.currentTarget.value
-        setLocal(val)
-        onValueChange(val)
+        onValueChange(e.currentTarget.value)
+      }}
+      onChange={(e) => {
+        if (!composing.current) onValueChange(e.target.value)
       }}
       onFocus={(e) => { e.currentTarget.style.borderColor = '#6C63FF' }}
       onBlur={(e) => {
         e.currentTarget.style.borderColor = '#E5E7EB'
-        // Flush any value that may not have been synced
         if (!composing.current) onValueChange(e.currentTarget.value)
       }}
     />
