@@ -67,6 +67,8 @@ const DEFAULT_BAR: BarChartState = {
     orientation: 'vertical', legend: [], show_values: false, tick_fontsize: 10,
     bar_width: 0.8, show_grid: false, grid_linestyle: '--',
     legend_loc: 'best', xlim: null, ylim: null, xtick_step: null, ytick_step: null,
+    threshold_line: null, threshold_line_color: '#EF4444', threshold_line_style: '--',
+    bar_colors: null, merge_threshold: null, merge_dir: 'below', merge_label: 'その他',
   },
 }
 

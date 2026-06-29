@@ -90,6 +90,14 @@ export interface BarChartParams extends BaseFigureParams {
   ylim: [number, number] | null
   xtick_step: number | null
   ytick_step: number | null
+  // threshold features
+  threshold_line: number | null
+  threshold_line_color: string
+  threshold_line_style: string
+  bar_colors: string[] | null
+  merge_threshold: number | null
+  merge_dir: 'below' | 'above'
+  merge_label: string
 }
 
 export type BarChartState = BaseFigureState & {

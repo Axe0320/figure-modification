@@ -10,12 +10,13 @@ interface Props {
   onReset: () => void
 }
 
-type Section = 'text' | 'display' | 'axis' | 'size'
+type Section = 'text' | 'display' | 'threshold' | 'axis' | 'size'
 const SECTIONS: { key: Section; label: string }[] = [
-  { key: 'text',    label: 'テキスト' },
-  { key: 'display', label: '表示' },
-  { key: 'axis',    label: '軸' },
-  { key: 'size',    label: 'サイズ' },
+  { key: 'text',      label: 'テキスト' },
+  { key: 'display',   label: '表示' },
+  { key: 'threshold', label: '閾値・色' },
+  { key: 'axis',      label: '軸' },
+  { key: 'size',      label: 'サイズ' },
 ]
 
 const LEGEND_LOCS = [
@@ -212,6 +213,134 @@ export default function BarChartEditor({ figure, onChange, onReset }: Props) {
                           <button key={val} onClick={() => onChange({ grid_linestyle: val })} style={is(p.grid_linestyle === val)}>{lbl}</button>
                         ))}
                       </div>
+                    </div>
+                  )}
+                </>
+              )}
+
+              {key === 'threshold' && (
+                <>
+                  {/* 閾値線 */}
+                  <div>
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="text-xs text-gray-500">閾値線</label>
+                      <button
+                        onClick={() => onChange({ threshold_line: p.threshold_line !== null ? null : 0 })}
+                        className="w-8 h-4 rounded-full transition-all relative"
+                        style={{ background: p.threshold_line !== null ? '#6C63FF' : '#D1D5DB' }}>
+                        <span className="absolute top-0.5 w-3 h-3 rounded-full bg-white transition-all shadow-sm"
+                          style={{ left: p.threshold_line !== null ? '1rem' : '0.125rem' }} />
+                      </button>
+                    </div>
+                    {p.threshold_line !== null && (
+                      <div className="space-y-2 mt-1">
+                        <div className="flex items-center gap-2">
+                          <label className="text-xs text-gray-400 w-12 shrink-0">値</label>
+                          <input type="number" step="any" value={p.threshold_line}
+                            onChange={(e) => onChange({ threshold_line: Number(e.target.value) })}
+                            className="flex-1 text-sm px-2 py-1" style={inputStyle}
+                            onFocus={(e) => { e.currentTarget.style.borderColor = '#6C63FF' }}
+                            onBlur={(e) => { e.currentTarget.style.borderColor = '#E5E7EB' }} />
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <label className="text-xs text-gray-400 w-12 shrink-0">色</label>
+                          <ColorEditor value={p.threshold_line_color} onChange={(c) => onChange({ threshold_line_color: c })} />
+                        </div>
+                        <div>
+                          <label className="text-xs text-gray-400 block mb-1">スタイル</label>
+                          <div className="flex gap-1.5 flex-wrap">
+                            {GRID_STYLES.map(({ val, label: lbl }) => (
+                              <button key={val} onClick={() => onChange({ threshold_line_style: val })} style={is(p.threshold_line_style === val)}>{lbl}</button>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* まとめ処理（単一系列のみ） */}
+                  {nSeries === 1 && (
+                    <div>
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="text-xs text-gray-500">閾値でまとめる</label>
+                        <button
+                          onClick={() => onChange({ merge_threshold: p.merge_threshold !== null ? null : 0 })}
+                          className="w-8 h-4 rounded-full transition-all relative"
+                          style={{ background: p.merge_threshold !== null ? '#6C63FF' : '#D1D5DB' }}>
+                          <span className="absolute top-0.5 w-3 h-3 rounded-full bg-white transition-all shadow-sm"
+                            style={{ left: p.merge_threshold !== null ? '1rem' : '0.125rem' }} />
+                        </button>
+                      </div>
+                      {p.merge_threshold !== null && (
+                        <div className="space-y-2 mt-1">
+                          <div className="flex items-center gap-2">
+                            <label className="text-xs text-gray-400 w-12 shrink-0">値</label>
+                            <input type="number" step="any" value={p.merge_threshold}
+                              onChange={(e) => onChange({ merge_threshold: Number(e.target.value) })}
+                              className="flex-1 text-sm px-2 py-1" style={inputStyle}
+                              onFocus={(e) => { e.currentTarget.style.borderColor = '#6C63FF' }}
+                              onBlur={(e) => { e.currentTarget.style.borderColor = '#E5E7EB' }} />
+                          </div>
+                          <div>
+                            <label className="text-xs text-gray-400 block mb-1">方向</label>
+                            <div className="flex gap-1.5">
+                              {([['below', '以下'] as const, ['above', '以上'] as const]).map(([val, lbl]) => (
+                                <button key={val} onClick={() => onChange({ merge_dir: val })} style={is(p.merge_dir === val)}>{lbl}</button>
+                              ))}
+                            </div>
+                          </div>
+                          <div>
+                            <label className="text-xs text-gray-400 block mb-1">まとめたバーのラベル</label>
+                            <input type="text" value={p.merge_label}
+                              onChange={(e) => onChange({ merge_label: e.target.value })}
+                              placeholder="その他" className="w-full text-sm px-2 py-1" style={inputStyle}
+                              onFocus={(e) => { e.currentTarget.style.borderColor = '#6C63FF' }}
+                              onBlur={(e) => { e.currentTarget.style.borderColor = '#E5E7EB' }} />
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* 棒の個別色（単一系列のみ） */}
+                  {nSeries === 1 && (
+                    <div>
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="text-xs text-gray-500">棒ごとに色指定</label>
+                        <button
+                          onClick={() => {
+                            if (p.bar_colors !== null) {
+                              onChange({ bar_colors: null })
+                            } else {
+                              const cats = figure.data.labels.length
+                              const init = Array.from({ length: cats }, (_, i) => p.colors[i % p.colors.length])
+                              onChange({ bar_colors: init })
+                            }
+                          }}
+                          className="w-8 h-4 rounded-full transition-all relative"
+                          style={{ background: p.bar_colors !== null ? '#6C63FF' : '#D1D5DB' }}>
+                          <span className="absolute top-0.5 w-3 h-3 rounded-full bg-white transition-all shadow-sm"
+                            style={{ left: p.bar_colors !== null ? '1rem' : '0.125rem' }} />
+                        </button>
+                      </div>
+                      {p.bar_colors !== null && (
+                        <div className="space-y-1.5 mt-1">
+                          {figure.data.labels.map((lbl, i) => (
+                            <div key={i} className="flex items-center gap-2">
+                              <span className="text-xs text-gray-400 flex-1 min-w-0 truncate">{lbl || `Bar ${i + 1}`}</span>
+                              <ColorEditor
+                                value={p.bar_colors![i] ?? p.colors[i % p.colors.length]}
+                                onChange={(c) => {
+                                  const next = [...(p.bar_colors!)]
+                                  while (next.length <= i) next.push(p.colors[next.length % p.colors.length])
+                                  next[i] = c
+                                  onChange({ bar_colors: next })
+                                }}
+                              />
+                            </div>
+                          ))}
+                        </div>
+                      )}
                     </div>
                   )}
                 </>
