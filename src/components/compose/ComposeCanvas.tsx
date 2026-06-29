@@ -12,8 +12,13 @@ const TYPE_LABEL: Record<string, string> = {
 }
 
 export default function ComposeCanvas({ figures, layout, previews }: Props) {
-  const { gridCols, gap } = layout
+  const { gridCols, gridRows, gap } = layout
   const gapPx = Math.round(gap * 28)   // ≈ screen px per cm
+  const n = figures.length
+  const rows = gridRows > 0 ? gridRows : Math.ceil(n / gridCols)
+
+  // gridCols=1 のとき画像が横幅いっぱいになりすぎないよう中央寄せで制限
+  const singleColMaxWidth = 480
 
   if (figures.length === 0) {
     return (
@@ -31,12 +36,14 @@ export default function ComposeCanvas({ figures, layout, previews }: Props) {
       style={{
         display: 'grid',
         gridTemplateColumns: `repeat(${gridCols}, 1fr)`,
+        gridTemplateRows: `repeat(${rows}, auto)`,
         gap: `${gapPx}px`,
         background: 'white',
         padding: `${gapPx}px`,
         border: '1px solid #E5E7EB',
         borderRadius: 14,
         boxShadow: 'var(--shadow-md)',
+        ...(gridCols === 1 ? { maxWidth: singleColMaxWidth, margin: '0 auto', width: '100%' } : {}),
       }}
     >
       {figures.map((fig, i) => {

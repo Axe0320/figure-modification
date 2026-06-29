@@ -64,7 +64,7 @@ export const useFigureStore = create<FigureStore>((set) => ({
         set({
           figures: savedFigures,
           selectedId: savedFigures[0].id,
-          layout: savedLayout ?? DEFAULT_COMPOSE_LAYOUT,
+          layout: savedLayout ? { ...DEFAULT_COMPOSE_LAYOUT, ...savedLayout } : DEFAULT_COMPOSE_LAYOUT,
           initialized: true,
         })
       } else {

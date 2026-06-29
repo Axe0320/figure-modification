@@ -33,14 +33,14 @@ export default function FigureList({ figures, selectedId, onSelect, onDelete, on
   }, [])
 
   return (
-    <div className="flex items-center gap-1.5 px-3 py-2 border-b border-gray-100 overflow-x-auto">
+    <div className="flex items-center gap-2 px-3 py-2.5 border-b border-gray-100 overflow-x-auto">
       {figures.map((fig, i) => {
         const selected = fig.id === selectedId
         return (
           <button
             key={fig.id}
             onClick={() => onSelect(fig.id)}
-            className="flex items-center gap-1 px-2 py-1 rounded-lg text-xs shrink-0 transition-all"
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm shrink-0 transition-all font-medium"
             style={{
               background: selected ? '#EEF2FF' : '#F9FAFB',
               border: selected ? '1px solid #C4B5FD' : '1px solid #E5E7EB',
@@ -48,13 +48,13 @@ export default function FigureList({ figures, selectedId, onSelect, onDelete, on
             }}
             title={TYPE_FULL[fig.type]}
           >
-            <span className="font-medium">{i + 1}</span>
+            <span className="font-bold">{i + 1}</span>
             <span>{TYPE_LABEL[fig.type]}</span>
             {figures.length > 1 && (
               <span
                 role="button"
                 onClick={(e) => { e.stopPropagation(); onDelete(fig.id) }}
-                className="ml-0.5 leading-none"
+                className="ml-0.5 leading-none text-base"
                 style={{ color: selected ? '#A78BFA' : '#9CA3AF' }}
               >
                 ×
@@ -68,7 +68,7 @@ export default function FigureList({ figures, selectedId, onSelect, onDelete, on
       <div className="relative shrink-0" ref={menuRef}>
         <button
           onClick={() => setShowMenu((v) => !v)}
-          className="px-2 py-1 rounded-lg text-xs font-semibold transition-all"
+          className="px-3 py-1.5 rounded-lg text-sm font-bold transition-all"
           style={{
             border: '1px dashed #C4B5FD',
             color: '#6C63FF',

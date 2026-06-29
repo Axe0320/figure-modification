@@ -55,13 +55,14 @@ class handler(BaseHTTPRequestHandler):
                 fig = mod.render(spec.get('data'), spec.get('params', {}))
                 rendered.append(fig_to_bytes(fig, 'png', dpi))
 
-            cols   = max(1, int(layout.get('gridCols', 2)))
-            gap_in = float(layout.get('gap', 0.5)) / 2.54   # cm → inches
+            cols      = max(1, int(layout.get('gridCols', 2)))
+            grid_rows = int(layout.get('gridRows', 0))
+            gap_in    = float(layout.get('gap', 0.5)) / 2.54   # cm → inches
 
             # Load rendered PNGs as float arrays via matplotlib
             images = [mpimg.imread(io.BytesIO(b)) for b in rendered]
             n      = len(images)
-            rows   = math.ceil(n / cols)
+            rows   = grid_rows if grid_rows > 0 else math.ceil(n / cols)
 
             # Image sizes in inches at the target DPI
             img_w = [img.shape[1] / dpi for img in images]

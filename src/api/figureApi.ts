@@ -72,7 +72,7 @@ export const composeAndExport = async (
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       figures: figures.map((f) => ({ type: f.type, data: f.data, params: f.params })),
-      layout: { gridCols: layout.gridCols, gap: layout.gap },
+      layout: { gridCols: layout.gridCols, gridRows: layout.gridRows, gap: layout.gap },
       output: { format, dpi },
     }),
   })

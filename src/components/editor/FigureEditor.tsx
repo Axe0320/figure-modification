@@ -30,20 +30,18 @@ export default function FigureEditor({ figure, onChange, onReset }: Props) {
       <div className="flex justify-end mb-2">
         <button
           onClick={onReset}
-          className="text-xs px-2 py-1 transition-all"
+          className="text-xs font-semibold px-3 py-1.5 transition-all"
           style={{
-            color: '#9CA3AF',
-            border: '1px solid #E5E7EB',
+            color: '#EF4444',
+            border: '1px solid #FECACA',
             borderRadius: 6,
-            background: 'white',
+            background: '#FEF2F2',
           }}
           onMouseEnter={(e) => {
-            e.currentTarget.style.color = '#6C63FF'
-            e.currentTarget.style.borderColor = '#C4B5FD'
+            e.currentTarget.style.background = '#FEE2E2'
           }}
           onMouseLeave={(e) => {
-            e.currentTarget.style.color = '#9CA3AF'
-            e.currentTarget.style.borderColor = '#E5E7EB'
+            e.currentTarget.style.background = '#FEF2F2'
           }}
         >
           リセット

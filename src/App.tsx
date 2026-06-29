@@ -319,17 +319,18 @@ export default function App() {
 
         {/* Mode toggle */}
         <div
-          className="flex rounded-lg overflow-hidden"
-          style={{ border: '1px solid #E5E7EB' }}
+          className="flex rounded-xl overflow-hidden"
+          style={{ border: '1px solid #E5E7EB', boxShadow: 'var(--shadow-sm)' }}
         >
           {(['edit', 'compose'] as AppMode[]).map((mode) => (
             <button
               key={mode}
               onClick={() => setAppMode(mode)}
-              className="px-3 py-1.5 text-xs font-semibold transition-all"
+              className="px-5 py-2 text-sm font-bold transition-all"
               style={{
                 background: appMode === mode ? '#6C63FF' : 'white',
                 color: appMode === mode ? 'white' : '#6B7280',
+                minWidth: 72,
               }}
             >
               {mode === 'edit' ? '編集' : '構成'}
@@ -357,13 +358,16 @@ export default function App() {
 
               {selectedFigure && (
                 <>
-                  {/* 図種タブ */}
-                  <div className="flex border-b border-gray-200 px-3 pt-3">
+                  {/* 図種タブ (sticky) */}
+                  <div
+                    className="flex border-b border-gray-200 px-3 pt-3 bg-white"
+                    style={{ position: 'sticky', top: 0, zIndex: 10 }}
+                  >
                     {FIGURE_TYPES.map((t) => (
                       <button
                         key={t.type}
                         onClick={() => handleTypeSwitch(t.type)}
-                        className="flex-1 py-2 text-xs font-semibold border-b-2 -mb-px transition-colors"
+                        className="flex-1 py-2 text-sm font-semibold border-b-2 -mb-px transition-colors"
                         style={{
                           borderBottomColor: selectedFigure.type === t.type ? '#6C63FF' : 'transparent',
                           color: selectedFigure.type === t.type ? '#6C63FF' : '#6B7280',

@@ -43,9 +43,9 @@ export default function ComposeSettings({
 }: Props) {
   return (
     <div className="space-y-5">
-      {/* Grid columns */}
+      {/* Grid columns / rows */}
       <div>
-        <label className="block text-xs text-gray-500 mb-1.5">グリッド列数</label>
+        <label className="block text-xs text-gray-500 mb-1.5">列数</label>
         <div className="flex gap-1.5">
           {[1, 2, 3, 4].map((n) => (
             <button
@@ -54,6 +54,24 @@ export default function ComposeSettings({
               style={btnStyle(layout.gridCols === n)}
             >
               {n}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div>
+        <label className="block text-xs text-gray-500 mb-1.5">
+          行数
+          <span className="ml-1 text-[10px] text-gray-400">(0 = 自動)</span>
+        </label>
+        <div className="flex gap-1.5">
+          {[0, 1, 2, 3, 4].map((n) => (
+            <button
+              key={n}
+              onClick={() => onLayoutChange({ gridRows: n })}
+              style={btnStyle(layout.gridRows === n)}
+            >
+              {n === 0 ? '自動' : n}
             </button>
           ))}
         </div>

@@ -74,13 +74,15 @@ export interface FigurePosition {
 export interface ComposeLayout {
   mode: 'grid' | 'free'
   gridCols: number
-  gap: number   // cm
+  gridRows: number   // 0 = auto (ceil(n/cols))
+  gap: number        // cm
   positions: FigurePosition[]
 }
 
 export const DEFAULT_COMPOSE_LAYOUT: ComposeLayout = {
   mode: 'grid',
   gridCols: 2,
+  gridRows: 0,
   gap: 0.5,
   positions: [],
 }
