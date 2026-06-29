@@ -49,6 +49,7 @@ import FigurePreview from './components/preview/FigurePreview'
 import FigureList from './components/common/FigureList'
 import ComposeSettings from './components/compose/ComposeSettings'
 import ComposeCanvas from './components/compose/ComposeCanvas'
+import ImportModal from './components/import/ImportModal'
 
 // ------------------------------------------------------------------ defaults
 const DEFAULT_CM: ConfusionMatrixState = {
@@ -357,6 +358,7 @@ export default function App() {
   const [exporting, setExporting]       = useState(false)
   const [downloadFormat, setDownloadFormat] = useState<OutputFormat>('png')
   const [downloadLoading, setDownloadLoading] = useState(false)
+  const [showImportModal, setShowImportModal] = useState(false)
 
   const selectedFigure = figures.find((f) => f.id === selectedId) ?? figures[0] ?? null
 
@@ -450,6 +452,21 @@ export default function App() {
     addFigure(newFig)
     setSelectedId(newFig.id)
   }, [figures, addFigure, setSelectedId])
+
+  const handleOcrApply = useCallback((
+    type: FigureType,
+    dataPatch: unknown,
+    paramsPatch: Record<string, unknown>,
+  ) => {
+    const base = { ...DEFAULT_BY_TYPE[type], id: genId() }
+    const patched = {
+      ...base,
+      data: dataPatch ?? base.data,
+      params: { ...base.params, ...paramsPatch },
+    } as FigureState
+    addFigure(patched)
+    setSelectedId(patched.id)
+  }, [addFigure, setSelectedId])
 
   // ----------------------------------------------------- type switch
   const handleTypeSwitch = useCallback((type: FigureType) => {
@@ -704,6 +721,14 @@ export default function App() {
 
         <div className="w-px self-stretch bg-gray-200 mx-1 shrink-0" />
 
+        <button
+          onClick={() => setShowImportModal(true)}
+          className="text-xs px-3 py-1.5 rounded-xl font-semibold shrink-0 transition-colors"
+          style={{ background: '#F0EFFE', color: '#6C63FF', border: '1px solid #DDD6FE' }}
+        >
+          図を読み込む
+        </button>
+
         <div className="flex rounded-xl overflow-hidden shrink-0" style={{ border: '1px solid #E5E7EB', boxShadow: 'var(--shadow-sm)' }}>
           {(['edit', 'compose'] as AppMode[]).map((mode) => (
             <button
@@ -887,6 +912,13 @@ export default function App() {
           )}
         </div>
       </main>
+
+      {showImportModal && (
+        <ImportModal
+          onApply={handleOcrApply}
+          onClose={() => setShowImportModal(false)}
+        />
+      )}
     </div>
   )
 }
