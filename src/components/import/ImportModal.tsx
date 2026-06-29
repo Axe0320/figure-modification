@@ -1,7 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
 import type { FigureType } from '../../types/figures'
 import { useOcr, type OcrProvider } from '../../hooks/useOcr'
-import OcrSettings from './OcrSettings'
 import OcrConfirm from './OcrConfirm'
 import PointDigitizer, { type DigitizerSeries } from './PointDigitizer'
 
@@ -53,7 +52,6 @@ export default function ImportModal({ onApply, onClose }: Props) {
   const [figType, setFigType]     = useState<FigureType>('bar_chart')
   const [provider, setProvider]   = useState<OcrProvider>('claude')
   const [dragging, setDragging]   = useState(false)
-  const [showSettings, setShowSettings] = useState(false)
 
   const { status, extracted, error, run, reset } = useOcr()
 
@@ -137,17 +135,7 @@ export default function ImportModal({ onApply, onClose }: Props) {
             <>
               <div className="flex items-center justify-between mb-5">
                 <h2 className="text-base font-bold text-gray-800">図を読み込む (OCR)</h2>
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => setShowSettings(true)}
-                    className="text-xs px-2 py-1 rounded-lg"
-                    style={{ border: '1px solid #E5E7EB', color: '#6B7280' }}
-                    title="APIキー設定"
-                  >
-                    ⚙️ APIキー
-                  </button>
-                  <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-lg leading-none">✕</button>
-                </div>
+                <button onClick={onClose} className="text-gray-400 hover:text-gray-600 text-lg leading-none">✕</button>
               </div>
 
               {/* drop zone */}
@@ -292,7 +280,6 @@ export default function ImportModal({ onApply, onClose }: Props) {
         </div>
       </div>
 
-      {showSettings && <OcrSettings onClose={() => setShowSettings(false)} />}
     </>
   )
 }

@@ -50,6 +50,7 @@ import FigureList from './components/common/FigureList'
 import ComposeSettings from './components/compose/ComposeSettings'
 import ComposeCanvas from './components/compose/ComposeCanvas'
 import ImportModal from './components/import/ImportModal'
+import OcrSettings from './components/import/OcrSettings'
 
 // ------------------------------------------------------------------ defaults
 const DEFAULT_CM: ConfusionMatrixState = {
@@ -359,6 +360,7 @@ export default function App() {
   const [downloadFormat, setDownloadFormat] = useState<OutputFormat>('png')
   const [downloadLoading, setDownloadLoading] = useState(false)
   const [showImportModal, setShowImportModal] = useState(false)
+  const [showOcrSettings, setShowOcrSettings] = useState(false)
 
   const selectedFigure = figures.find((f) => f.id === selectedId) ?? figures[0] ?? null
 
@@ -723,10 +725,20 @@ export default function App() {
 
         <button
           onClick={() => setShowImportModal(true)}
-          className="text-xs px-3 py-1.5 rounded-xl font-semibold shrink-0 transition-colors"
-          style={{ background: '#F0EFFE', color: '#6C63FF', border: '1px solid #DDD6FE' }}
+          className="flex items-center gap-1.5 px-4 py-2 rounded-xl font-bold shrink-0 transition-colors text-sm"
+          style={{ background: '#6C63FF', color: 'white', boxShadow: '0 2px 8px rgba(108,99,255,0.35)' }}
         >
+          <span style={{ fontSize: 15 }}>🖼️</span>
           図を読み込む
+        </button>
+
+        <button
+          onClick={() => setShowOcrSettings(true)}
+          className="flex items-center gap-1.5 px-3 py-2 rounded-xl font-semibold shrink-0 transition-colors text-sm"
+          style={{ background: '#F0EFFE', color: '#6C63FF', border: '1px solid #DDD6FE' }}
+          title="Vision APIキー設定"
+        >
+          ⚙️ APIキー
         </button>
 
         <div className="flex rounded-xl overflow-hidden shrink-0" style={{ border: '1px solid #E5E7EB', boxShadow: 'var(--shadow-sm)' }}>
@@ -918,6 +930,9 @@ export default function App() {
           onApply={handleOcrApply}
           onClose={() => setShowImportModal(false)}
         />
+      )}
+      {showOcrSettings && (
+        <OcrSettings onClose={() => setShowOcrSettings(false)} />
       )}
     </div>
   )
