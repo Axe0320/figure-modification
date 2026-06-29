@@ -235,6 +235,14 @@ export default function App() {
     removeFigure(id)
   }, [removeFigure])
 
+  const handleDuplicateFigure = useCallback((id: string) => {
+    const fig = figures.find((f) => f.id === id)
+    if (!fig) return
+    const newFig = { ...fig, id: genId() }
+    addFigure(newFig)
+    setSelectedId(newFig.id)
+  }, [figures, addFigure, setSelectedId])
+
   // ----------------------------------------------------- type switch
   const handleTypeSwitch = useCallback((type: FigureType) => {
     if (!selectedFigure || selectedFigure.type === type) return
@@ -391,6 +399,7 @@ export default function App() {
           onSelect={setSelectedId}
           onDelete={handleDeleteFigure}
           onAdd={handleAddFigure}
+          onDuplicate={handleDuplicateFigure}
         />
 
         <div className="w-px self-stretch bg-gray-200 mx-1 shrink-0" />

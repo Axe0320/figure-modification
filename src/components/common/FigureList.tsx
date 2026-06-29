@@ -7,6 +7,7 @@ interface Props {
   onSelect: (id: string) => void
   onDelete: (id: string) => void
   onAdd: (type: FigureType) => void
+  onDuplicate: (id: string) => void
 }
 
 const TYPE_LABEL: Record<FigureType, string> = {
@@ -26,8 +27,13 @@ const TYPE_FULL: Record<FigureType, string> = {
   histogram:        'ヒストグラム',
 }
 
-export default function FigureList({ figures, selectedId, onSelect, onDelete, onAdd }: Props) {
+const ALL_TYPES: FigureType[] = [
+  'confusion_matrix', 'heatmap', 'bar_chart', 'line_plot', 'scatter_plot', 'histogram',
+]
+
+export default function FigureList({ figures, selectedId, onSelect, onDelete, onAdd, onDuplicate }: Props) {
   const [showMenu, setShowMenu] = useState(false)
+  const [hoverId, setHoverId] = useState<string | null>(null)
   const menuRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -42,17 +48,17 @@ export default function FigureList({ figures, selectedId, onSelect, onDelete, on
 
   return (
     <div className="flex items-center flex-1 min-w-0 gap-2 px-3">
-      {/* チップのみ overflow-x-auto — ＋ボタンはこの外 */}
-      <div
-        className="flex items-center gap-2 flex-1 min-w-0 overflow-x-auto py-1"
-        style={{ scrollbarWidth: 'none' }}
-      >
+      {/* チップのみ overflow-x-auto */}
+      <div className="flex items-center gap-2 flex-1 min-w-0 overflow-x-auto py-1" style={{ scrollbarWidth: 'none' }}>
         {figures.map((fig, i) => {
           const selected = fig.id === selectedId
+          const hovered = fig.id === hoverId
           return (
             <button
               key={fig.id}
               onClick={() => onSelect(fig.id)}
+              onMouseEnter={() => setHoverId(fig.id)}
+              onMouseLeave={() => setHoverId(null)}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm shrink-0 transition-all font-medium"
               style={{
                 background: selected ? '#EEF2FF' : '#F9FAFB',
@@ -63,12 +69,31 @@ export default function FigureList({ figures, selectedId, onSelect, onDelete, on
             >
               <span className="font-bold">{i + 1}</span>
               <span>{TYPE_LABEL[fig.type]}</span>
+
+              {/* 複製ボタン：ホバー時に表示 */}
+              <span
+                role="button"
+                onClick={(e) => { e.stopPropagation(); onDuplicate(fig.id) }}
+                title="複製"
+                className="ml-0.5 leading-none text-xs transition-opacity"
+                style={{
+                  opacity: hovered ? 1 : 0,
+                  color: selected ? '#A78BFA' : '#9CA3AF',
+                  fontSize: 13,
+                }}
+              >
+                ⎘
+              </span>
+
               {figures.length > 1 && (
                 <span
                   role="button"
                   onClick={(e) => { e.stopPropagation(); onDelete(fig.id) }}
-                  className="ml-0.5 leading-none text-base"
-                  style={{ color: selected ? '#A78BFA' : '#9CA3AF' }}
+                  className="leading-none text-base transition-opacity"
+                  style={{
+                    opacity: hovered ? 1 : 0.4,
+                    color: selected ? '#A78BFA' : '#9CA3AF',
+                  }}
                 >
                   ×
                 </span>
@@ -95,9 +120,9 @@ export default function FigureList({ figures, selectedId, onSelect, onDelete, on
         {showMenu && (
           <div
             className="absolute top-full right-0 mt-1 bg-white rounded-lg z-50 py-1"
-            style={{ boxShadow: '0 4px 16px rgba(0,0,0,.12)', border: '1px solid #E5E7EB', minWidth: 130 }}
+            style={{ boxShadow: '0 4px 16px rgba(0,0,0,.12)', border: '1px solid #E5E7EB', minWidth: 140 }}
           >
-            {(['confusion_matrix', 'heatmap'] as FigureType[]).map((t) => (
+            {ALL_TYPES.map((t) => (
               <button
                 key={t}
                 onClick={() => { onAdd(t); setShowMenu(false) }}
