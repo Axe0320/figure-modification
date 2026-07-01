@@ -6,7 +6,7 @@ interface Props {
 }
 
 const PROVIDERS: { key: string; provider: OcrProvider; label: string; desc: string; placeholder: string; color: string }[] = [
-  { key: 'ocr_anthropic_key', provider: 'claude',  label: 'Anthropic',  desc: 'Claude Vision (推奨)',   placeholder: 'sk-ant-api03-...', color: '#D97706' },
+  { key: 'ocr_anthropic_key', provider: 'claude',  label: 'Anthropic',  desc: 'Claude Vision',          placeholder: 'sk-ant-api03-...', color: '#D97706' },
   { key: 'ocr_openai_key',    provider: 'openai',  label: 'OpenAI',     desc: 'GPT-4o Vision',          placeholder: 'sk-proj-...',      color: '#059669' },
   { key: 'ocr_google_key',    provider: 'gemini',  label: 'Google',     desc: 'Gemini 3.1 Flash Lite',  placeholder: 'AIzaSy...',        color: '#2563EB' },
 ]

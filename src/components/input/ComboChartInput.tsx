@@ -1,7 +1,9 @@
-import { useRef } from 'react'
+import { useState, useRef } from 'react'
 import type { ComboData } from '../../types/figures'
 import { parseCsv, toNum } from './DataInput/parseCsv'
 import CsvUploadButton from '../common/CsvUploadButton'
+import ManualComboInput from './DataInput/ManualComboInput'
+import InputModeToggle from './DataInput/InputModeToggle'
 
 interface Props {
   data: ComboData
@@ -39,6 +41,13 @@ function parseSection(rows: string[][]): { labels: string[]; series: { name: str
 export default function ComboChartInput({ data, onChange }: Props) {
   const barRef  = useRef<HTMLTextAreaElement>(null)
   const lineRef = useRef<HTMLTextAreaElement>(null)
+  const [mode, setMode] = useState<'manual' | 'paste'>('manual')
+  const [manualKey, setManualKey] = useState(0)
+
+  const switchMode = (m: 'manual' | 'paste') => {
+    if (m === 'manual') setManualKey(k => k + 1)
+    setMode(m)
+  }
 
   const applyBar = () => {
     const rows = parseCsv(barRef.current?.value ?? '')
@@ -62,50 +71,58 @@ export default function ComboChartInput({ data, onChange }: Props) {
         {data.labels.length} カテゴリ｜棒: {data.bar_series.length} 系列｜折れ線: {data.line_series.length} 系列
       </div>
 
-      {/* 棒グラフデータ */}
-      <div>
-        <div className="flex items-center justify-between mb-1">
-          <p className="text-[10px] font-semibold text-gray-500">棒グラフデータ（ラベル + 値）</p>
-          <CsvUploadButton onParse={(rows) => {
-            if (rows.length === 0) return
-            const { labels, series } = parseSection(rows)
-            onChange({ ...data, labels, bar_series: series })
-          }} />
-        </div>
-        <textarea
-          ref={barRef}
-          rows={4}
-          className="w-full p-2 text-xs font-mono resize-y"
-          style={{ ...inputStyle, borderRadius: 8 }}
-          placeholder={'Q1\t100\nQ2\t150\nQ3\t130\nQ4\t200'}
-          onFocus={(e) => { e.currentTarget.style.borderColor = '#6C63FF' }}
-          onBlur={(e)  => { e.currentTarget.style.borderColor = '#E5E7EB' }}
-        />
-        <button onClick={applyBar} className="mt-1 w-full py-1.5 text-xs font-semibold text-white rounded-lg" style={{ background: '#6C63FF' }}
-          onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = '#5a52e0' }}
-          onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = '#6C63FF' }}>
-          棒データを適用
-        </button>
-      </div>
+      <InputModeToggle mode={mode} onSwitch={switchMode} />
 
-      {/* 折れ線データ */}
-      <div>
-        <p className="text-[10px] font-semibold text-gray-500 mb-1">折れ線データ（値のみ、カテゴリは棒グラフと共有）</p>
-        <textarea
-          ref={lineRef}
-          rows={4}
-          className="w-full p-2 text-xs font-mono resize-y"
-          style={{ ...inputStyle, borderRadius: 8 }}
-          placeholder={'成長率\n0.10\n0.50\n-0.13\n0.54'}
-          onFocus={(e) => { e.currentTarget.style.borderColor = '#6C63FF' }}
-          onBlur={(e)  => { e.currentTarget.style.borderColor = '#E5E7EB' }}
-        />
-        <button onClick={applyLine} className="mt-1 w-full py-1.5 text-xs font-semibold text-white rounded-lg" style={{ background: '#6C63FF' }}
-          onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = '#5a52e0' }}
-          onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = '#6C63FF' }}>
-          折れ線データを適用
-        </button>
-      </div>
+      {mode === 'manual' && (
+        <ManualComboInput key={manualKey} initData={data} onChange={onChange} />
+      )}
+
+      {mode === 'paste' && (
+        <>
+          <div>
+            <div className="flex items-center justify-between mb-1">
+              <p className="text-[10px] font-semibold text-gray-500">棒グラフデータ（ラベル + 値）</p>
+              <CsvUploadButton onParse={(rows) => {
+                if (rows.length === 0) return
+                const { labels, series } = parseSection(rows)
+                onChange({ ...data, labels, bar_series: series })
+              }} />
+            </div>
+            <textarea
+              ref={barRef}
+              rows={4}
+              className="w-full p-2 text-xs font-mono resize-y"
+              style={{ ...inputStyle, borderRadius: 8 }}
+              placeholder={'Q1\t100\nQ2\t150\nQ3\t130\nQ4\t200'}
+              onFocus={(e) => { e.currentTarget.style.borderColor = '#6C63FF' }}
+              onBlur={(e)  => { e.currentTarget.style.borderColor = '#E5E7EB' }}
+            />
+            <button onClick={applyBar} className="mt-1 w-full py-1.5 text-xs font-semibold text-white rounded-lg" style={{ background: '#6C63FF' }}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = '#5a52e0' }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = '#6C63FF' }}>
+              棒データを適用
+            </button>
+          </div>
+
+          <div>
+            <p className="text-[10px] font-semibold text-gray-500 mb-1">折れ線データ（値のみ、カテゴリは棒グラフと共有）</p>
+            <textarea
+              ref={lineRef}
+              rows={4}
+              className="w-full p-2 text-xs font-mono resize-y"
+              style={{ ...inputStyle, borderRadius: 8 }}
+              placeholder={'成長率\n0.10\n0.50\n-0.13\n0.54'}
+              onFocus={(e) => { e.currentTarget.style.borderColor = '#6C63FF' }}
+              onBlur={(e)  => { e.currentTarget.style.borderColor = '#E5E7EB' }}
+            />
+            <button onClick={applyLine} className="mt-1 w-full py-1.5 text-xs font-semibold text-white rounded-lg" style={{ background: '#6C63FF' }}
+              onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = '#5a52e0' }}
+              onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = '#6C63FF' }}>
+              折れ線データを適用
+            </button>
+          </div>
+        </>
+      )}
 
       <button
         onClick={() => onChange(SAMPLE)}

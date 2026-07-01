@@ -39,14 +39,18 @@ const TYPE_JA: Record<FigureType, string> = {
   pie_chart:          '円グラフ',
 }
 
-const VISION_PROVIDERS: { value: Exclude<OcrProvider, 'tesseract'>; label: string; key: string }[] = [
-  { value: 'claude',  label: 'Claude',  key: 'ocr_anthropic_key' },
-  { value: 'openai',  label: 'GPT-4o',  key: 'ocr_openai_key' },
-  { value: 'gemini',  label: 'Gemini',  key: 'ocr_google_key' },
+const VISION_PROVIDERS: { value: Exclude<OcrProvider, 'tesseract'>; label: string; key: string; color: string }[] = [
+  { value: 'claude',  label: 'Claude',  key: 'ocr_anthropic_key', color: '#D97706' },
+  { value: 'openai',  label: 'GPT-4o',  key: 'ocr_openai_key',   color: '#059669' },
+  { value: 'gemini',  label: 'Gemini',  key: 'ocr_google_key',   color: '#2563EB' },
 ]
 
-// all types now use LLM OCR; PointDigitizer kept for potential future use
+// all types now use LLM OCR; PointDigitizer kept for Tesseract line/scatter
 const DIGITIZE_TYPES: FigureType[] = []
+
+// Tesseract-compatible types
+const TESSERACT_GRID: FigureType[]     = ['confusion_matrix', 'heatmap']
+const TESSERACT_DIGITIZE: FigureType[] = ['line_plot', 'scatter_plot']
 
 export default function ImportModal({ onApply, onClose }: Props) {
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -61,11 +65,27 @@ export default function ImportModal({ onApply, onClose }: Props) {
 
   const { status, extracted, detectedType, error, run, reset } = useOcr()
 
-  // Auto-select Tesseract when no Vision API key is available
+  // Restore saved provider; fall back to first provider with a key, then Tesseract
   useEffect(() => {
-    const anyKey = VISION_PROVIDERS.some(p => Boolean(localStorage.getItem(p.key)?.trim()))
-    if (!anyKey) setProvider('tesseract')
+    const saved = localStorage.getItem('ocr_provider') as OcrProvider | null
+    const allProviders: OcrProvider[] = [...VISION_PROVIDERS.map(p => p.value), 'tesseract']
+    if (saved && allProviders.includes(saved)) {
+      setProvider(saved)
+    } else {
+      const first = VISION_PROVIDERS.find(p => Boolean(localStorage.getItem(p.key)?.trim()))
+      setProvider(first?.value ?? 'tesseract')
+    }
   }, [])
+
+  // Persist provider selection
+  useEffect(() => {
+    localStorage.setItem('ocr_provider', provider)
+  }, [provider])
+
+  // Tesseract cannot auto-detect; disable autoDetect when tesseract is selected
+  useEffect(() => {
+    if (provider === 'tesseract') setAutoDetect(false)
+  }, [provider])
 
   const loadFile = useCallback(async (file: File) => {
     if (!file.type.startsWith('image/')) return
@@ -97,8 +117,15 @@ export default function ImportModal({ onApply, onClose }: Props) {
     if (file) loadFile(file)
   }
 
+  const DIGITIZE_TYPES_TESSERACT: FigureType[] = ['line_plot', 'scatter_plot']
+
   const handleAnalyze = async () => {
     if (!imageB64) return
+    // Tesseract cannot extract coordinates from line/scatter — use PointDigitizer
+    if (provider === 'tesseract' && DIGITIZE_TYPES_TESSERACT.includes(figType)) {
+      setStep('digitize')
+      return
+    }
     await run(imageB64, autoDetect ? 'auto' : figType, provider)
   }
 
@@ -196,36 +223,51 @@ export default function ImportModal({ onApply, onClose }: Props) {
               {/* figure type selector */}
               <div className="mt-4 space-y-2">
                 <label className="text-xs font-semibold text-gray-600">図の種類</label>
-                {/* auto-detect toggle */}
+                {/* auto-detect toggle (disabled for Tesseract) */}
                 <button
-                  onClick={() => setAutoDetect(true)}
+                  onClick={() => { if (provider !== 'tesseract') setAutoDetect(true) }}
+                  disabled={provider === 'tesseract'}
                   className="w-full text-xs py-1.5 px-3 rounded-lg font-semibold transition-colors"
                   style={{
                     background: autoDetect ? '#6C63FF' : '#F3F4F6',
                     color: autoDetect ? 'white' : '#374151',
+                    opacity: provider === 'tesseract' ? 0.4 : 1,
+                    cursor: provider === 'tesseract' ? 'not-allowed' : 'pointer',
                   }}
                 >
-                  自動検出（推奨）
+                  自動検出（推奨）{provider === 'tesseract' ? ' — Tesseract非対応' : ''}
                 </button>
                 {/* manual type grid */}
                 <div
                   className="grid gap-1 transition-opacity"
                   style={{ gridTemplateColumns: 'repeat(4, 1fr)', opacity: autoDetect ? 0.4 : 1 }}
                 >
-                  {ALL_TYPES.map(t => (
-                    <button
-                      key={t}
-                      onClick={() => { setFigType(t); setAutoDetect(false) }}
-                      className="text-xs py-1.5 px-2 rounded-lg font-medium transition-colors"
-                      style={{
-                        background: !autoDetect && figType === t ? '#6C63FF' : '#F3F4F6',
-                        color: !autoDetect && figType === t ? 'white' : '#374151',
-                        border: !autoDetect && figType === t ? 'none' : '1px solid transparent',
-                      }}
-                    >
-                      {TYPE_JA[t]}
-                    </button>
-                  ))}
+                  {ALL_TYPES.map(t => {
+                    const isTesseract = provider === 'tesseract'
+                    const unsupported = isTesseract && !TESSERACT_GRID.includes(t) && !TESSERACT_DIGITIZE.includes(t)
+                    const digitize    = isTesseract && TESSERACT_DIGITIZE.includes(t)
+                    const active      = !autoDetect && figType === t
+                    return (
+                      <button
+                        key={t}
+                        onClick={() => { if (!unsupported) { setFigType(t); setAutoDetect(false) } }}
+                        className="text-xs py-1.5 px-2 rounded-lg font-medium transition-colors relative"
+                        style={{
+                          background: active ? '#6C63FF' : '#F3F4F6',
+                          color: active ? 'white' : unsupported ? '#C0C0C0' : '#374151',
+                          border: active ? 'none' : '1px solid transparent',
+                          opacity: unsupported ? 0.35 : 1,
+                          cursor: unsupported ? 'not-allowed' : 'pointer',
+                        }}
+                        title={unsupported ? 'Tesseract非対応' : digitize ? '手動点取り (PointDigitizer)' : undefined}
+                      >
+                        {TYPE_JA[t]}
+                        {digitize && !active && (
+                          <span style={{ fontSize: 8, position: 'absolute', top: 2, right: 3, color: '#6B7280' }}>✏️</span>
+                        )}
+                      </button>
+                    )
+                  })}
                 </div>
               </div>
 
@@ -241,28 +283,30 @@ export default function ImportModal({ onApply, onClose }: Props) {
                         <button
                           key={p.value}
                           onClick={() => setProvider(p.value)}
-                          className="text-xs py-1 px-3 rounded-lg transition-colors flex items-center gap-1"
+                          className="text-sm py-2 px-4 rounded-xl font-semibold transition-all flex items-center gap-1.5"
                           style={{
-                            background: active ? '#6C63FF' : '#F3F4F6',
-                            color: active ? 'white' : '#374151',
+                            background: active ? p.color : `${p.color}18`,
+                            color: active ? 'white' : p.color,
+                            border: `1.5px solid ${p.color}`,
                           }}
                         >
                           {p.label}
                           {keySet && (
-                            <span style={{ color: active ? '#A5F3FC' : '#10B981', fontSize: 10 }}>✓</span>
+                            <span style={{ fontSize: 10, opacity: active ? 0.9 : 0.7 }}>✓</span>
                           )}
                         </button>
                       )
                     })}
                     <button
                       onClick={() => setProvider('tesseract')}
-                      className="text-xs py-1 px-3 rounded-lg transition-colors"
+                      className="text-sm py-2 px-4 rounded-xl font-semibold transition-all"
                       style={{
                         background: provider === 'tesseract' ? '#374151' : '#F3F4F6',
                         color: provider === 'tesseract' ? 'white' : '#6B7280',
+                        border: '1.5px solid ' + (provider === 'tesseract' ? '#374151' : '#E5E7EB'),
                       }}
                     >
-                      Tesseract <span style={{ fontSize: 9, opacity: 0.75 }}>(ローカル)</span>
+                      Tesseract <span style={{ fontSize: 10, opacity: 0.75 }}>(ローカル)</span>
                     </button>
                   </div>
 

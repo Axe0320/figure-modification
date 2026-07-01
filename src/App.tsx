@@ -396,6 +396,8 @@ const DEFAULT_BY_TYPE: Record<FigureType, FigureState> = {
 }
 
 const CLEAR_DATA_BY_TYPE: Partial<Record<FigureType, FigureState['data']>> = {
+  confusion_matrix:   [[]] as number[][],
+  heatmap:            [[]] as number[][],
   bar_chart:          { labels: [], values: [[]] },
   line_plot:          { x: [], y: [[]] },
   scatter_plot:       { series: [{ x: [], y: [] }] },

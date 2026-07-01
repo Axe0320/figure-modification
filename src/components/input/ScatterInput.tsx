@@ -1,6 +1,9 @@
-import { useRef, useState } from 'react'
+import { useState } from 'react'
 import type { ScatterData } from '../../types/figures'
 import { parseCsv, toNum } from './DataInput/parseCsv'
+import CsvUploadButton from '../common/CsvUploadButton'
+import ManualSeriesInput, { type SeriesEntry } from './DataInput/ManualSeriesInput'
+import InputModeToggle from './DataInput/InputModeToggle'
 
 interface Props {
   data: ScatterData
@@ -26,6 +29,26 @@ function makeLabels(n: number): string[] {
   return Array.from({ length: n }, (_, i) => `Series ${i + 1}`)
 }
 
+function seriesToText(s: { x: number[]; y: number[] }): string {
+  return s.x.map((x, i) => `${x}\t${s.y[i] ?? 0}`).join('\n')
+}
+
+function dataToEntries(data: ScatterData): SeriesEntry[] {
+  return (data.series ?? []).map((s, i) => ({
+    label: `Series ${i + 1}`,
+    rows: s.x.map((x, j) => [String(x), String(s.y[j] ?? '')]),
+  }))
+}
+
+function entriesToData(entries: SeriesEntry[]): ScatterData {
+  return {
+    series: entries.map(e => ({
+      x: e.rows.map(r => parseFloat(r[0] ?? '') || 0),
+      y: e.rows.map(r => parseFloat(r[1] ?? '') || 0),
+    })),
+  }
+}
+
 interface SeriesCardProps {
   index: number
   series: { x: number[]; y: number[] }
@@ -35,10 +58,9 @@ interface SeriesCardProps {
 }
 
 function SeriesCard({ index, series, canDelete, onApply, onDelete }: SeriesCardProps) {
-  const pasteRef = useRef<HTMLTextAreaElement>(null)
+  const [text, setText] = useState(() => seriesToText(series))
 
   const handleApply = () => {
-    const text = pasteRef.current?.value ?? ''
     const rows = parseCsv(text)
     if (rows.length === 0) return
     const startRow = isNaN(toNum(rows[0]?.[0] ?? '')) ? 1 : 0
@@ -46,7 +68,6 @@ function SeriesCard({ index, series, canDelete, onApply, onDelete }: SeriesCardP
     const x = dataRows.map((r) => toNum(r[0] ?? '0'))
     const y = dataRows.map((r) => toNum(r[1] ?? '0'))
     onApply(index, x, y)
-    if (pasteRef.current) pasteRef.current.value = ''
   }
 
   return (
@@ -67,11 +88,10 @@ function SeriesCard({ index, series, canDelete, onApply, onDelete }: SeriesCardP
           </button>
         )}
       </div>
-      <p className="text-[10px] text-gray-400">
-        CSV / TSV（1列目: x、2列目: y）
-      </p>
+      <p className="text-[10px] text-gray-400">CSV / TSV（1列目: x、2列目: y）</p>
       <textarea
-        ref={pasteRef}
+        value={text}
+        onChange={(e) => setText(e.target.value)}
         rows={4}
         className="w-full p-2 text-xs font-mono resize-y"
         style={{ ...inputStyle, borderRadius: 8, background: 'white' }}
@@ -94,27 +114,37 @@ function SeriesCard({ index, series, canDelete, onApply, onDelete }: SeriesCardP
 
 export default function ScatterInput({ data, onChange }: Props) {
   const [series, setSeries] = useState((data.series?.length ?? 0) > 0 ? data.series : [{ x: [] as number[], y: [] as number[] }])
+  const [mode, setMode] = useState<'manual' | 'paste'>('manual')
+  const [manualKey, setManualKey] = useState(0)
+
+  const switchMode = (m: 'manual' | 'paste') => {
+    if (m === 'manual') setManualKey(k => k + 1)
+    setMode(m)
+  }
 
   const emit = (next: typeof series) => {
     onChange({ series: next }, makeLabels(next.length))
   }
 
+  const handleManualChange = (entries: SeriesEntry[]) => {
+    const next = entriesToData(entries).series
+    setSeries(next)
+    onChange({ series: next }, entries.map(e => e.label))
+  }
+
   const handleApply = (index: number, x: number[], y: number[]) => {
     const next = series.map((s, i) => i === index ? { x, y } : s)
-    setSeries(next)
-    emit(next)
+    setSeries(next); emit(next)
   }
 
   const handleDelete = (index: number) => {
     const next = series.filter((_, i) => i !== index)
-    setSeries(next)
-    emit(next)
+    setSeries(next); emit(next)
   }
 
   const handleAdd = () => {
     const next = [...series, { x: [] as number[], y: [] as number[] }]
-    setSeries(next)
-    emit(next)
+    setSeries(next); emit(next)
   }
 
   const handleSample = () => {
@@ -122,28 +152,60 @@ export default function ScatterInput({ data, onChange }: Props) {
     onChange(SAMPLE, makeLabels(SAMPLE.series.length))
   }
 
+  const handleCsv = (rows: string[][]) => {
+    if (rows.length === 0) return
+    const startRow = isNaN(toNum(rows[0]?.[0] ?? '')) ? 1 : 0
+    const dr = rows.slice(startRow)
+    const nSeries = (dr[0]?.length ?? 1) - 1
+    if (nSeries <= 1) {
+      const next = [{ x: dr.map(r => toNum(r[0] ?? '0')), y: dr.map(r => toNum(r[1] ?? '0')) }]
+      setSeries(next); emit(next)
+    } else {
+      const xs = dr.map(r => toNum(r[0] ?? '0'))
+      const next = Array.from({ length: nSeries }, (_, si) => ({
+        x: xs, y: dr.map(r => toNum(r[si + 1] ?? '0')),
+      }))
+      setSeries(next); emit(next)
+    }
+  }
+
   return (
     <div className="space-y-3">
-      {series.map((s, i) => (
-        <SeriesCard
-          key={i}
-          index={i}
-          series={s}
-          canDelete={series.length > 1}
-          onApply={handleApply}
-          onDelete={handleDelete}
-        />
-      ))}
+      <InputModeToggle mode={mode} onSwitch={switchMode} />
 
-      <button
-        onClick={handleAdd}
-        className="w-full py-1.5 text-xs font-semibold rounded-lg transition-all"
-        style={{ border: '1px solid #C4B5FD', color: '#6C63FF', background: 'white' }}
-        onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = '#F5F3FF' }}
-        onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = 'white' }}
-      >
-        ＋ 系列を追加
-      </button>
+      {mode === 'manual' && (
+        <ManualSeriesInput
+          key={manualKey}
+          col1Header="x" col2Header="y"
+          initSeries={dataToEntries(data)}
+          onChange={handleManualChange}
+        />
+      )}
+
+      {mode === 'paste' && (
+        <>
+          {series.map((s, i) => (
+            <SeriesCard
+              key={i} index={i} series={s}
+              canDelete={series.length > 1}
+              onApply={handleApply}
+              onDelete={handleDelete}
+            />
+          ))}
+          <button
+            onClick={handleAdd}
+            className="w-full py-1.5 text-xs font-semibold rounded-lg transition-all"
+            style={{ border: '1px solid #C4B5FD', color: '#6C63FF', background: 'white' }}
+            onMouseEnter={(e) => { (e.currentTarget as HTMLButtonElement).style.background = '#F5F3FF' }}
+            onMouseLeave={(e) => { (e.currentTarget as HTMLButtonElement).style.background = 'white' }}
+          >
+            ＋ 系列を追加
+          </button>
+          <div className="flex gap-2">
+            <CsvUploadButton onParse={handleCsv} label="CSVで読み込む" />
+          </div>
+        </>
+      )}
 
       <button
         onClick={handleSample}

@@ -1,6 +1,8 @@
 import { useState, useCallback } from 'react'
 import type { ErrorBarData, ErrorBarSeriesItem } from '../../types/figures'
 import CsvUploadButton from '../common/CsvUploadButton'
+import ManualErrorBarInput from './DataInput/ManualErrorBarInput'
+import InputModeToggle from './DataInput/InputModeToggle'
 
 interface Props {
   data: ErrorBarData
@@ -50,9 +52,7 @@ function SeriesCard({ series, index, labels, total, onChangeSeries, onRemove }: 
 
       <div>
         <label className="block text-xs text-gray-500 mb-1">平均値 ({labels.length} グループ)</label>
-        <input
-          type="text"
-          value={meansRaw}
+        <input type="text" value={meansRaw}
           onChange={(e) => setMeansRaw(e.target.value)}
           onBlur={(e) => { flush(e.target.value, errsRaw) }}
           placeholder={labels.map(() => '0').join(', ')}
@@ -63,9 +63,7 @@ function SeriesCard({ series, index, labels, total, onChangeSeries, onRemove }: 
       </div>
       <div>
         <label className="block text-xs text-gray-500 mb-1">誤差 (SD / SE)</label>
-        <input
-          type="text"
-          value={errsRaw}
+        <input type="text" value={errsRaw}
           onChange={(e) => setErrsRaw(e.target.value)}
           onBlur={(e) => { flush(meansRaw, e.target.value) }}
           placeholder={labels.map(() => '0').join(', ')}
@@ -80,6 +78,13 @@ function SeriesCard({ series, index, labels, total, onChangeSeries, onRemove }: 
 
 export default function ErrorBarInput({ data, onChange }: Props) {
   const [labelsRaw, setLabelsRaw] = useState(data.labels.join(', '))
+  const [mode, setMode] = useState<'manual' | 'paste'>('manual')
+  const [manualKey, setManualKey] = useState(0)
+
+  const switchMode = (m: 'manual' | 'paste') => {
+    if (m === 'manual') setManualKey(k => k + 1)
+    setMode(m)
+  }
 
   const flushLabels = useCallback((raw: string) => {
     const labels = raw.split(/,\s*/).map((s) => s.trim()).filter(Boolean)
@@ -119,46 +124,49 @@ export default function ErrorBarInput({ data, onChange }: Props) {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <span className="text-xs text-gray-400">エラーバーデータ</span>
-        <CsvUploadButton onParse={handleCsv} label="CSVで一括入力" />
-      </div>
-      <p className="text-xs text-gray-400 -mt-3">CSV形式: 1列目=ラベル, 以降=系列名平均・系列名誤差（交互）</p>
-      <div>
-        <label className="block text-xs text-gray-500 mb-1">グループラベル (カンマ区切り)</label>
-        <input
-          type="text"
-          value={labelsRaw}
-          onChange={(e) => setLabelsRaw(e.target.value)}
-          onBlur={(e) => flushLabels(e.target.value)}
-          placeholder="条件A, 条件B, 条件C"
-          className="w-full text-sm px-2 py-1.5 font-mono"
-          style={inputStyle}
-          onFocus={(e) => { e.currentTarget.style.borderColor = '#6C63FF' }}
-        />
-      </div>
+      <InputModeToggle mode={mode} onSwitch={switchMode} />
 
-      <div className="space-y-3">
-        {data.series.map((s, i) => (
-          <SeriesCard
-            key={i}
-            series={s}
-            index={i}
-            labels={data.labels}
-            total={data.series.length}
-            onChangeSeries={(updated) => updateSeries(i, updated)}
-            onRemove={() => removeSeries(i)}
-          />
-        ))}
-      </div>
+      {mode === 'manual' && (
+        <ManualErrorBarInput key={manualKey} initData={data} onChange={onChange} />
+      )}
 
-      <button onClick={addSeries}
-        className="w-full text-sm py-2 rounded-xl transition-all"
-        style={{ border: '1.5px dashed #C4B5FD', color: '#6C63FF', background: 'white' }}
-        onMouseEnter={(e) => { e.currentTarget.style.background = '#F5F3FF' }}
-        onMouseLeave={(e) => { e.currentTarget.style.background = 'white' }}>
-        + 系列追加
-      </button>
+      {mode === 'paste' && (
+        <>
+          <div className="flex items-center justify-between">
+            <span className="text-xs text-gray-400">エラーバーデータ</span>
+            <CsvUploadButton onParse={handleCsv} label="CSVで一括入力" />
+          </div>
+          <p className="text-xs text-gray-400 -mt-3">CSV形式: 1列目=ラベル, 以降=系列名平均・系列名誤差（交互）</p>
+          <div>
+            <label className="block text-xs text-gray-500 mb-1">グループラベル (カンマ区切り)</label>
+            <input
+              type="text" value={labelsRaw}
+              onChange={(e) => setLabelsRaw(e.target.value)}
+              onBlur={(e) => flushLabels(e.target.value)}
+              placeholder="条件A, 条件B, 条件C"
+              className="w-full text-sm px-2 py-1.5 font-mono"
+              style={inputStyle}
+              onFocus={(e) => { e.currentTarget.style.borderColor = '#6C63FF' }}
+            />
+          </div>
+          <div className="space-y-3">
+            {data.series.map((s, i) => (
+              <SeriesCard
+                key={i} series={s} index={i} labels={data.labels} total={data.series.length}
+                onChangeSeries={(updated) => updateSeries(i, updated)}
+                onRemove={() => removeSeries(i)}
+              />
+            ))}
+          </div>
+          <button onClick={addSeries}
+            className="w-full text-sm py-2 rounded-xl transition-all"
+            style={{ border: '1.5px dashed #C4B5FD', color: '#6C63FF', background: 'white' }}
+            onMouseEnter={(e) => { e.currentTarget.style.background = '#F5F3FF' }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = 'white' }}>
+            + 系列追加
+          </button>
+        </>
+      )}
     </div>
   )
 }

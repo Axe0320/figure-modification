@@ -1,5 +1,7 @@
 import { useState } from 'react'
 import type { RocData } from '../../types/figures'
+import ManualSeriesInput, { type SeriesEntry } from './DataInput/ManualSeriesInput'
+import InputModeToggle from './DataInput/InputModeToggle'
 
 interface Props {
   data: RocData
@@ -45,11 +47,42 @@ function initSeries(data: RocData): SeriesState[] {
   }))
 }
 
+function dataToEntries(data: RocData): SeriesEntry[] {
+  return data.fpr.map((fpr, i) => ({
+    label: `Class ${i}`,
+    scalar: String(data.auc[i] ?? 0),
+    rows: fpr.map((f, j) => [String(f), String((data.tpr[i] ?? [])[j] ?? '')]),
+  }))
+}
+
+function entriesToData(entries: SeriesEntry[]): { data: RocData; labels: string[] } {
+  return {
+    data: {
+      fpr: entries.map(e => e.rows.map(r => parseFloat(r[0] ?? '') || 0)),
+      tpr: entries.map(e => e.rows.map(r => parseFloat(r[1] ?? '') || 0)),
+      auc: entries.map(e => parseFloat(e.scalar ?? '0') || 0),
+    },
+    labels: entries.map(e => e.label),
+  }
+}
+
 export default function RocInput({ data, onChange }: Props) {
   const [series, setSeries] = useState<SeriesState[]>(() => initSeries(data))
   const [hoverApply, setHoverApply] = useState<number | null>(null)
   const [hoverAdd, setHoverAdd] = useState(false)
   const [hoverSample, setHoverSample] = useState(false)
+  const [mode, setMode] = useState<'manual' | 'paste'>('manual')
+  const [manualKey, setManualKey] = useState(0)
+
+  const switchMode = (m: 'manual' | 'paste') => {
+    if (m === 'manual') setManualKey(k => k + 1)
+    setMode(m)
+  }
+
+  const handleManualChange = (entries: SeriesEntry[]) => {
+    const { data: d, labels } = entriesToData(entries)
+    onChange(d, labels)
+  }
 
   const updateSeries = (i: number, patch: Partial<SeriesState>) => {
     setSeries(prev => prev.map((s, idx) => idx === i ? { ...s, ...patch } : s))
@@ -71,107 +104,66 @@ export default function RocInput({ data, onChange }: Props) {
   const handleRemove = (i: number) => {
     const next = series.filter((_, idx) => idx !== i)
     setSeries(next)
-    const newFpr = next.map(s => parseCol(s.fprText))
-    const newTpr = next.map(s => parseCol(s.tprText))
-    const newAuc = next.map(s => parseFloat(s.auc) || 0)
-    const labels = next.map(s => s.label)
-    onChange({ fpr: newFpr, tpr: newTpr, auc: newAuc }, labels)
+    onChange({ fpr: next.map(s => parseCol(s.fprText)), tpr: next.map(s => parseCol(s.tprText)), auc: next.map(s => parseFloat(s.auc) || 0) }, next.map(s => s.label))
   }
 
   const handleSample = () => {
     setSeries(SAMPLE_LABELS.map((label, i) => ({
-      label,
-      auc: String(SAMPLE.auc[i]),
-      fprText: SAMPLE.fpr[i].join('\n'),
-      tprText: SAMPLE.tpr[i].join('\n'),
+      label, auc: String(SAMPLE.auc[i]), fprText: SAMPLE.fpr[i].join('\n'), tprText: SAMPLE.tpr[i].join('\n'),
     })))
     onChange(SAMPLE, SAMPLE_LABELS)
   }
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-      {series.map((s, i) => (
-        <div key={i} style={{ border: '1px solid #E5E7EB', borderRadius: 8, padding: 10, display: 'flex', flexDirection: 'column', gap: 6 }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <span style={{ fontSize: 12, fontWeight: 600, color: '#374151' }}>系列 {i + 1}</span>
-            {series.length > 1 && (
-              <button
-                onClick={() => handleRemove(i)}
-                style={{ fontSize: 11, color: '#9CA3AF', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
-              >
-                削除
-              </button>
-            )}
-          </div>
-          <input
-            type="text"
-            value={s.label}
-            onChange={e => updateSeries(i, { label: e.target.value })}
-            placeholder="系列名"
-            style={{ ...inputStyle, padding: '4px 8px', width: '100%', boxSizing: 'border-box' }}
-          />
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <label style={{ fontSize: 11, color: '#6B7280', whiteSpace: 'nowrap' }}>AUC</label>
-            <input
-              type="number"
-              value={s.auc}
-              onChange={e => updateSeries(i, { auc: e.target.value })}
-              step={0.001}
-              min={0}
-              max={1}
-              style={{ ...inputStyle, padding: '4px 8px', width: 90 }}
-            />
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-              <label style={{ fontSize: 11, color: '#6B7280' }}>FPR列</label>
-              <textarea
-                rows={5}
-                value={s.fprText}
-                onChange={e => updateSeries(i, { fprText: e.target.value })}
-                style={{ ...inputStyle, padding: '4px 8px', resize: 'vertical', width: '100%', boxSizing: 'border-box' }}
-              />
+      <InputModeToggle mode={mode} onSwitch={switchMode} />
+
+      {mode === 'manual' && (
+        <ManualSeriesInput
+          key={manualKey}
+          col1Header="FPR" col2Header="TPR" scalarLabel="AUC"
+          initSeries={dataToEntries(data)}
+          onChange={handleManualChange}
+        />
+      )}
+
+      {mode === 'paste' && (
+        <>
+          {series.map((s, i) => (
+            <div key={i} style={{ border: '1px solid #E5E7EB', borderRadius: 8, padding: 10, display: 'flex', flexDirection: 'column', gap: 6 }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <span style={{ fontSize: 12, fontWeight: 600, color: '#374151' }}>系列 {i + 1}</span>
+                {series.length > 1 && (
+                  <button onClick={() => handleRemove(i)} style={{ fontSize: 11, color: '#9CA3AF', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>削除</button>
+                )}
+              </div>
+              <input type="text" value={s.label} onChange={e => updateSeries(i, { label: e.target.value })} placeholder="系列名" style={{ ...inputStyle, padding: '4px 8px', width: '100%', boxSizing: 'border-box' }} />
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                <label style={{ fontSize: 11, color: '#6B7280', whiteSpace: 'nowrap' }}>AUC</label>
+                <input type="number" value={s.auc} onChange={e => updateSeries(i, { auc: e.target.value })} step={0.001} min={0} max={1} style={{ ...inputStyle, padding: '4px 8px', width: 90 }} />
+              </div>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                  <label style={{ fontSize: 11, color: '#6B7280' }}>FPR列</label>
+                  <textarea rows={5} value={s.fprText} onChange={e => updateSeries(i, { fprText: e.target.value })} style={{ ...inputStyle, padding: '4px 8px', resize: 'vertical', width: '100%', boxSizing: 'border-box' }} />
+                </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                  <label style={{ fontSize: 11, color: '#6B7280' }}>TPR列</label>
+                  <textarea rows={5} value={s.tprText} onChange={e => updateSeries(i, { tprText: e.target.value })} style={{ ...inputStyle, padding: '4px 8px', resize: 'vertical', width: '100%', boxSizing: 'border-box' }} />
+                </div>
+              </div>
+              <button onClick={() => handleApply(i)} onMouseEnter={() => setHoverApply(i)} onMouseLeave={() => setHoverApply(null)} style={btnPrimary(hoverApply === i)}>適用</button>
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-              <label style={{ fontSize: 11, color: '#6B7280' }}>TPR列</label>
-              <textarea
-                rows={5}
-                value={s.tprText}
-                onChange={e => updateSeries(i, { tprText: e.target.value })}
-                style={{ ...inputStyle, padding: '4px 8px', resize: 'vertical', width: '100%', boxSizing: 'border-box' }}
-              />
-            </div>
-          </div>
-          <button
-            onClick={() => handleApply(i)}
-            onMouseEnter={() => setHoverApply(i)}
-            onMouseLeave={() => setHoverApply(null)}
-            style={btnPrimary(hoverApply === i)}
-          >
-            適用
+          ))}
+          <button onClick={handleAdd} onMouseEnter={() => setHoverAdd(true)} onMouseLeave={() => setHoverAdd(false)}
+            style={{ border: '1px dashed #6C63FF', borderRadius: 8, padding: '6px 0', fontSize: 12, color: hoverAdd ? '#5a52e0' : '#6C63FF', background: 'none', cursor: 'pointer', width: '100%' }}>
+            ＋ 系列を追加
           </button>
-        </div>
-      ))}
-      <button
-        onClick={handleAdd}
-        onMouseEnter={() => setHoverAdd(true)}
-        onMouseLeave={() => setHoverAdd(false)}
-        style={{
-          border: '1px dashed #6C63FF', borderRadius: 8, padding: '6px 0', fontSize: 12,
-          color: hoverAdd ? '#5a52e0' : '#6C63FF', background: 'none', cursor: 'pointer', width: '100%',
-        }}
-      >
-        ＋ 系列を追加
-      </button>
-      <button
-        onClick={handleSample}
-        onMouseEnter={() => setHoverSample(true)}
-        onMouseLeave={() => setHoverSample(false)}
-        style={{
-          border: '1px solid #E5E7EB', borderRadius: 8, padding: '6px 0', fontSize: 12,
-          color: '#6B7280', background: hoverSample ? '#F9FAFB' : 'white', cursor: 'pointer', width: '100%',
-        }}
-      >
+        </>
+      )}
+
+      <button onClick={handleSample} onMouseEnter={() => setHoverSample(true)} onMouseLeave={() => setHoverSample(false)}
+        style={{ border: '1px solid #E5E7EB', borderRadius: 8, padding: '6px 0', fontSize: 12, color: '#6B7280', background: hoverSample ? '#F9FAFB' : 'white', cursor: 'pointer', width: '100%' }}>
         サンプルデータ
       </button>
     </div>
