@@ -13,26 +13,30 @@ interface Props {
 type Step = 'upload' | 'digitize' | 'confirm'
 
 const ALL_TYPES: FigureType[] = [
-  'bar_chart', 'line_plot', 'scatter_plot', 'histogram',
+  'bar_chart', 'stacked_bar', 'combo_chart',
+  'line_plot', 'scatter_plot', 'pie_chart',
+  'histogram', 'box_plot', 'violin_plot', 'error_bar',
+  'heatmap', 'confusion_matrix',
   'roc_curve', 'pr_curve', 'learning_curve', 'feature_importance',
-  'box_plot', 'violin_plot', 'error_bar',
-  'confusion_matrix', 'heatmap',
 ]
 
 const TYPE_JA: Record<FigureType, string> = {
-  confusion_matrix: '混合行列',
-  heatmap: 'ヒートマップ',
-  bar_chart: '棒グラフ',
-  line_plot: '折れ線グラフ',
-  scatter_plot: '散布図',
-  histogram: 'ヒストグラム',
-  roc_curve: 'ROC曲線',
-  pr_curve: 'PR曲線',
-  learning_curve: '学習曲線',
+  confusion_matrix:   '混合行列',
+  heatmap:            'ヒートマップ',
+  bar_chart:          '棒グラフ',
+  line_plot:          '折れ線グラフ',
+  scatter_plot:       '散布図',
+  histogram:          'ヒストグラム',
+  roc_curve:          'ROC曲線',
+  pr_curve:           'PR曲線',
+  learning_curve:     '学習曲線',
   feature_importance: '特徴量重要度',
-  box_plot: '箱ひげ図',
-  violin_plot: 'バイオリンプロット',
-  error_bar: 'エラーバー',
+  box_plot:           '箱ひげ図',
+  violin_plot:        'バイオリンプロット',
+  error_bar:          'エラーバー',
+  stacked_bar:        '積み上げ棒グラフ',
+  combo_chart:        '棒+折れ線複合',
+  pie_chart:          '円グラフ',
 }
 
 const VISION_PROVIDERS: { value: Exclude<OcrProvider, 'tesseract'>; label: string; key: string }[] = [

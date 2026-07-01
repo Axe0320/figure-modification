@@ -109,25 +109,47 @@ function toDataAndParams(type: FigureType, extracted: Record<string, unknown>): 
         data: { labels: e.labels ?? [], series: e.series ?? [] },
         paramsPatch: {},
       }
+    case 'stacked_bar':
+      return {
+        data: { labels: e.labels ?? [], values: e.values ?? [[]] },
+        paramsPatch: {},
+      }
+    case 'combo_chart':
+      return {
+        data: {
+          labels: e.labels ?? [],
+          bar_series: e.bar_series ?? [],
+          line_series: e.line_series ?? [],
+        },
+        paramsPatch: {},
+      }
+    case 'pie_chart':
+      return {
+        data: { labels: e.labels ?? [], values: e.values ?? [] },
+        paramsPatch: {},
+      }
     default:
       return { data: null, paramsPatch: {} }
   }
 }
 
 const TYPE_JA: Record<FigureType, string> = {
-  confusion_matrix: '混合行列',
-  heatmap: 'ヒートマップ',
-  bar_chart: '棒グラフ',
-  line_plot: '折れ線グラフ',
-  scatter_plot: '散布図',
-  histogram: 'ヒストグラム',
-  roc_curve: 'ROC曲線',
-  pr_curve: 'PR曲線',
-  learning_curve: '学習曲線',
+  confusion_matrix:   '混合行列',
+  heatmap:            'ヒートマップ',
+  bar_chart:          '棒グラフ',
+  line_plot:          '折れ線グラフ',
+  scatter_plot:       '散布図',
+  histogram:          'ヒストグラム',
+  roc_curve:          'ROC曲線',
+  pr_curve:           'PR曲線',
+  learning_curve:     '学習曲線',
   feature_importance: '特徴量重要度',
-  box_plot: '箱ひげ図',
-  violin_plot: 'バイオリンプロット',
-  error_bar: 'エラーバー',
+  box_plot:           '箱ひげ図',
+  violin_plot:        'バイオリンプロット',
+  error_bar:          'エラーバー',
+  stacked_bar:        '積み上げ棒グラフ',
+  combo_chart:        '棒+折れ線複合',
+  pie_chart:          '円グラフ',
 }
 
 export default function OcrConfirm({ type, extracted, imageUrl, onApply, onBack, onClose }: Props) {
