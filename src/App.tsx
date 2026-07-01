@@ -357,6 +357,7 @@ export default function App() {
   const [loading, setLoading]           = useState(false)
   const [error, setError]               = useState<string | null>(null)
   const [exporting, setExporting]       = useState(false)
+  const [composeFormat, setComposeFormat] = useState<'png' | 'svg' | 'pdf'>('png')
   const [downloadFormat, setDownloadFormat] = useState<OutputFormat>('png')
   const [downloadLoading, setDownloadLoading] = useState(false)
   const [showImportModal, setShowImportModal] = useState(false)
@@ -667,10 +668,11 @@ export default function App() {
     if (figures.length === 0) return
     setExporting(true)
     try {
-      const b64 = await composeAndExport(figures, layout)
+      const b64 = await composeAndExport(figures, layout, composeFormat)
+      const mimeTypes = { png: 'image/png', svg: 'image/svg+xml', pdf: 'application/pdf' }
       const a = document.createElement('a')
-      a.href = `data:image/png;base64,${b64}`
-      a.download = 'compose.png'
+      a.href = `data:${mimeTypes[composeFormat]};base64,${b64}`
+      a.download = `compose.${composeFormat}`
       a.click()
     } catch (e) {
       setError(e instanceof Error ? e.message : String(e))
@@ -901,6 +903,8 @@ export default function App() {
                 onLayoutChange={setLayout}
                 onReorder={reorderFigures}
                 onExport={handleComposeExport}
+                onFormatChange={setComposeFormat}
+                format={composeFormat}
                 exporting={exporting}
               />
             </section>

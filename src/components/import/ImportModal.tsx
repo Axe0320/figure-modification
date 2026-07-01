@@ -1,6 +1,7 @@
 import { useState, useRef, useCallback, useEffect } from 'react'
 import type { FigureType } from '../../types/figures'
 import { useOcr, type OcrProvider } from '../../hooks/useOcr'
+import { preprocessImageB64 } from '../../ocr/imagePreprocess'
 import OcrConfirm from './OcrConfirm'
 import PointDigitizer, { type DigitizerSeries } from './PointDigitizer'
 
@@ -34,10 +35,10 @@ const TYPE_JA: Record<FigureType, string> = {
   error_bar: 'エラーバー',
 }
 
-const PROVIDERS: { value: OcrProvider; label: string }[] = [
-  { value: 'claude',  label: 'Claude (Anthropic)' },
-  { value: 'openai',  label: 'GPT-4o (OpenAI)' },
-  { value: 'gemini',  label: 'Gemini (Google)' },
+const VISION_PROVIDERS: { value: Exclude<OcrProvider, 'tesseract'>; label: string; key: string }[] = [
+  { value: 'claude',  label: 'Claude',  key: 'ocr_anthropic_key' },
+  { value: 'openai',  label: 'GPT-4o',  key: 'ocr_openai_key' },
+  { value: 'gemini',  label: 'Gemini',  key: 'ocr_google_key' },
 ]
 
 // line/scatter need manual digitization, not OCR
@@ -55,14 +56,25 @@ export default function ImportModal({ onApply, onClose }: Props) {
 
   const { status, extracted, error, run, reset } = useOcr()
 
-  const loadFile = useCallback((file: File) => {
+  // Auto-select Tesseract when no Vision API key is available
+  useEffect(() => {
+    const anyKey = VISION_PROVIDERS.some(p => Boolean(localStorage.getItem(p.key)?.trim()))
+    if (!anyKey) setProvider('tesseract')
+  }, [])
+
+  const loadFile = useCallback(async (file: File) => {
     if (!file.type.startsWith('image/')) return
     const reader = new FileReader()
-    reader.onload = e => {
+    reader.onload = async (e) => {
       const url = e.target?.result as string
       setImageUrl(url)
-      // strip data:image/xxx;base64, prefix
-      setImageB64(url.split(',')[1] ?? null)
+      const rawB64 = url.split(',')[1] ?? ''
+      try {
+        const processedB64 = await preprocessImageB64(rawB64)
+        setImageB64(processedB64)
+      } catch {
+        setImageB64(rawB64)
+      }
       reset()
     }
     reader.readAsDataURL(file)
@@ -111,6 +123,11 @@ export default function ImportModal({ onApply, onClose }: Props) {
     onApply(type, data, paramsPatch)
     onClose()
   }
+
+  const hasCurrentKey = provider !== 'tesseract' && Boolean(
+    localStorage.getItem(VISION_PROVIDERS.find(p => p.value === provider)?.key ?? '') ?? ''
+  )
+  const hasAnyVisionKey = VISION_PROVIDERS.some(p => Boolean(localStorage.getItem(p.key)?.trim()))
 
   return (
     <>
@@ -195,25 +212,55 @@ export default function ImportModal({ onApply, onClose }: Props) {
                 </div>
               </div>
 
-              {/* provider (only for non-digitize types) */}
+              {/* provider selector (only for non-digitize types) */}
               {!DIGITIZE_TYPES.includes(figType) && (
-                <div className="mt-3 space-y-1">
-                  <label className="text-xs font-semibold text-gray-600">Vision AI</label>
-                  <div className="flex gap-2">
-                    {PROVIDERS.map(p => (
-                      <button
-                        key={p.value}
-                        onClick={() => setProvider(p.value)}
-                        className="text-xs py-1 px-3 rounded-lg transition-colors"
-                        style={{
-                          background: provider === p.value ? '#6C63FF' : '#F3F4F6',
-                          color: provider === p.value ? 'white' : '#374151',
-                        }}
-                      >
-                        {p.label}
-                      </button>
-                    ))}
+                <div className="mt-3 space-y-1.5">
+                  <label className="text-xs font-semibold text-gray-600">解析方法</label>
+                  <div className="flex gap-2 flex-wrap">
+                    {VISION_PROVIDERS.map(p => {
+                      const keySet = Boolean(localStorage.getItem(p.key)?.trim())
+                      const active = provider === p.value
+                      return (
+                        <button
+                          key={p.value}
+                          onClick={() => setProvider(p.value)}
+                          className="text-xs py-1 px-3 rounded-lg transition-colors flex items-center gap-1"
+                          style={{
+                            background: active ? '#6C63FF' : '#F3F4F6',
+                            color: active ? 'white' : '#374151',
+                          }}
+                        >
+                          {p.label}
+                          {keySet && (
+                            <span style={{ color: active ? '#A5F3FC' : '#10B981', fontSize: 10 }}>✓</span>
+                          )}
+                        </button>
+                      )
+                    })}
+                    <button
+                      onClick={() => setProvider('tesseract')}
+                      className="text-xs py-1 px-3 rounded-lg transition-colors"
+                      style={{
+                        background: provider === 'tesseract' ? '#374151' : '#F3F4F6',
+                        color: provider === 'tesseract' ? 'white' : '#6B7280',
+                      }}
+                    >
+                      Tesseract <span style={{ fontSize: 9, opacity: 0.75 }}>(ローカル)</span>
+                    </button>
                   </div>
+
+                  {provider === 'tesseract' && (
+                    <p className="text-xs text-amber-700 mt-1 px-2 py-1.5 rounded-lg" style={{ background: '#FFFBEB' }}>
+                      {hasAnyVisionKey
+                        ? 'ブラウザ内OCRを使用。混合行列・ヒートマップ以外は手動修正が必要です。'
+                        : 'Vision APIキー未設定のためTesseract.js（ブラウザ内）を使用します。精度はVision APIより低くなります。'}
+                    </p>
+                  )}
+                  {provider !== 'tesseract' && !hasCurrentKey && (
+                    <p className="text-xs text-red-500 mt-1">
+                      このプロバイダのAPIキーが未設定です。⚙️ から設定してください。
+                    </p>
+                  )}
                 </div>
               )}
 

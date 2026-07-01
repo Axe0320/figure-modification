@@ -1,34 +1,9 @@
 from http.server import BaseHTTPRequestHandler
 import json
-import base64
 import sys
 import os
 
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
-
-try:
-    from PIL import Image, ImageEnhance
-    import io
-    PIL_AVAILABLE = True
-except ImportError:
-    PIL_AVAILABLE = False
-
-
-def preprocess_image(image_b64: str) -> str:
-    if not PIL_AVAILABLE:
-        return image_b64
-    img_data = base64.b64decode(image_b64)
-    img = Image.open(io.BytesIO(img_data)).convert('RGB')
-    w, h = img.size
-    max_size = 1280
-    if max(w, h) > max_size:
-        ratio = max_size / max(w, h)
-        img = img.resize((int(w * ratio), int(h * ratio)), Image.LANCZOS)
-    img = ImageEnhance.Contrast(img).enhance(1.2)
-    img = ImageEnhance.Sharpness(img).enhance(1.1)
-    buf = io.BytesIO()
-    img.save(buf, format='PNG', optimize=True)
-    return base64.b64encode(buf.getvalue()).decode()
 
 
 class handler(BaseHTTPRequestHandler):
@@ -52,12 +27,6 @@ class handler(BaseHTTPRequestHandler):
             self._respond(400, {'error': 'APIキーが必要です'})
             return
 
-        try:
-            processed = preprocess_image(image_b64)
-        except Exception as e:
-            self._respond(400, {'error': f'画像処理エラー: {e}'})
-            return
-
         from _lib.vision import SCHEMAS, call_vision
 
         schema = SCHEMAS.get(figure_type)
@@ -66,7 +35,7 @@ class handler(BaseHTTPRequestHandler):
             return
 
         try:
-            result = call_vision(processed, figure_type, schema, provider, api_key)
+            result = call_vision(image_b64, figure_type, schema, provider, api_key)
             self._respond(200, {'extracted': result, 'type': figure_type})
         except Exception as e:
             self._respond(500, {'error': str(e)})

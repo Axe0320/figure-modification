@@ -11,6 +11,8 @@ interface Props {
   onChange: (b: BracketItem[]) => void
 }
 
+type CorrectionType = 'none' | 'bonferroni' | 'holm'
+
 const is = (active: boolean): React.CSSProperties => ({
   border: active ? '1px solid #6C63FF' : '1px solid #E5E7EB',
   borderRadius: 8, background: active ? '#EEF2FF' : 'white',
@@ -28,6 +30,45 @@ const TESTS: { val: StatTestType; label: string }[] = [
   { val: 'mannwhitney', label: 'Mann-Whitney U' },
 ]
 
+const CORRECTIONS: { val: CorrectionType; label: string }[] = [
+  { val: 'none',        label: '補正なし' },
+  { val: 'bonferroni',  label: 'Bonferroni' },
+  { val: 'holm',        label: 'Holm' },
+]
+
+// Apply correction and return which pair indices are significant
+function applyCorrection(
+  pValues: number[],
+  alpha: number,
+  correction: CorrectionType,
+): boolean[] {
+  const m = pValues.length
+  if (m === 0) return []
+
+  if (correction === 'bonferroni') {
+    const threshold = alpha / m
+    return pValues.map(p => p <= threshold)
+  }
+
+  if (correction === 'holm') {
+    // Sort indices by p-value ascending, apply step-down thresholds
+    const order = pValues.map((p, i) => ({ p, i })).sort((a, b) => a.p - b.p)
+    const significant = new Array(m).fill(false)
+    for (let k = 0; k < m; k++) {
+      const threshold = alpha / (m - k)
+      if (order[k].p <= threshold) {
+        significant[order[k].i] = true
+      } else {
+        break  // Holm: once a test fails, all remaining are non-significant
+      }
+    }
+    return significant
+  }
+
+  // none
+  return pValues.map(p => p <= alpha)
+}
+
 const AddButton = ({ onClick }: { onClick: () => void }) => (
   <button onClick={onClick}
     className="w-full text-sm py-1.5 rounded-lg transition-all"
@@ -39,17 +80,18 @@ const AddButton = ({ onClick }: { onClick: () => void }) => (
 )
 
 export default function BracketSection({ brackets, nGroups, groups, labels, onChange }: Props) {
-  const [testType, setTestType]       = useState<StatTestType>('ttest')
-  const [alpha, setAlpha]             = useState<0.05 | 0.01>(0.05)
+  const [testType,   setTestType]   = useState<StatTestType>('ttest')
+  const [alpha,      setAlpha]      = useState<0.05 | 0.01>(0.05)
+  const [correction, setCorrection] = useState<CorrectionType>('none')
   const [autoRunning, setAutoRunning] = useState(false)
-  const [autoMsg, setAutoMsg]         = useState<string | null>(null)
+  const [autoMsg,     setAutoMsg]     = useState<string | null>(null)
 
   const groupLabels = Array.from({ length: nGroups }, (_, i) => labels?.[i] ?? `Group ${i + 1}`)
 
-  const getLabel = (p: number): string | null => {
+  const getLabel = (p: number, threshold: number): string | null => {
     if (p < 0.001) return '***'
     if (p < 0.01)  return '**'
-    if (alpha >= 0.05 && p < 0.05) return '*'
+    if (threshold >= 0.05 && p < 0.05) return '*'
     return null
   }
 
@@ -62,7 +104,7 @@ export default function BracketSection({ brackets, nGroups, groups, labels, onCh
         for (let j = i + 1; j < nGroups; j++)
           pairs.push([i, j])
 
-      const results = await Promise.all(
+      const rawResults = await Promise.all(
         pairs.map(([i, j]) => {
           const g1 = groups[i] ?? []; const g2 = groups[j] ?? []
           if (g1.length < 2 || g2.length < 2) return Promise.resolve(null)
@@ -72,19 +114,28 @@ export default function BracketSection({ brackets, nGroups, groups, labels, onCh
         })
       )
 
-      const newBrackets: BracketItem[] = results
-        .filter((r): r is { g1: number; g2: number; p: number } => r !== null)
+      const validResults = rawResults.filter(
+        (r): r is { g1: number; g2: number; p: number } => r !== null
+      )
+
+      const pValues = validResults.map(r => r.p)
+      const significant = applyCorrection(pValues, alpha, correction)
+
+      const newBrackets: BracketItem[] = validResults
+        .filter((_, k) => significant[k])
         .flatMap((r) => {
-          const label = getLabel(r.p)
+          const label = getLabel(r.p, alpha)
           if (!label) return []
           return [{ group1: r.g1, group2: r.g2, label, height: null }]
         })
 
       onChange(newBrackets)
+
+      const corrLabel = correction === 'none' ? '' : ` (${correction === 'bonferroni' ? 'Bonferroni' : 'Holm'}補正)`
       setAutoMsg(
         newBrackets.length === 0
-          ? `有意差なし (全ペア p ≥ ${alpha})`
-          : `${newBrackets.length} ペアに有意差あり`
+          ? `有意差なし${corrLabel} (全ペア p ≥ ${alpha})`
+          : `${newBrackets.length} ペアに有意差あり${corrLabel}`
       )
     } catch {
       setAutoMsg('APIに接続できませんでした')
@@ -167,6 +218,20 @@ export default function BracketSection({ brackets, nGroups, groups, labels, onCh
           {alpha === 0.05
             ? 'p<0.05→* / p<0.01→** / p<0.001→*** でブラケット生成'
             : 'p<0.01→** / p<0.001→*** のみ生成（p<0.05 は有意差なし扱い）'}
+        </p>
+      </div>
+
+      <div>
+        <label className="block text-xs text-gray-500 mb-1">多重比較補正</label>
+        <div className="flex gap-1 flex-wrap">
+          {CORRECTIONS.map(({ val, label }) => (
+            <button key={val} onClick={() => setCorrection(val)} style={is(correction === val)}>{label}</button>
+          ))}
+        </div>
+        <p className="text-xs text-gray-400 mt-1">
+          {correction === 'none'       && '補正なし（2グループ比較時はこれで十分）'}
+          {correction === 'bonferroni' && `閾値 = α/${'{'}m{'}'} (m=比較ペア数)。最も保守的な補正`}
+          {correction === 'holm'       && 'p値を昇順ソートし段階的に閾値を緩和。Bonferroniより検出力が高い'}
         </p>
       </div>
 

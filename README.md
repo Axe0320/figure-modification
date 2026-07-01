@@ -308,7 +308,10 @@ src/
 │   ├── figureApi.ts    # /api/render クライアント
 │   └── ocrApi.ts       # /api/ocr クライアント
 ├── hooks/
-│   └── useOcr.ts       # OCR 状態管理フック
+│   └── useOcr.ts       # OCR 状態管理フック（Vision API + Tesseract.js）
+├── ocr/
+│   ├── imagePreprocess.ts  # Canvas ベース前処理（リサイズ・コントラスト）
+│   └── tesseractWorker.ts  # Tesseract.js lazy-load ラッパー
 ├── store/
 │   └── figureStore.ts  # Zustand（図データ + レイアウト）
 └── types/
@@ -326,10 +329,9 @@ api/
 
 ## 制限事項
 
-- **OCR インポート**：サードパーティの Vision API キー（Anthropic / OpenAI / Google）が必要。抽出精度は図の鮮明さに依存するため、確認ステップでの編集を推奨
+- **OCR インポート**：Vision API キー未設定時は Tesseract.js（ブラウザ内）でフォールバック。混合行列・ヒートマップ以外は手動修正を推奨
 - **コールドスタート**：Vercel Functions の初回リクエストは最大 3 秒程度かかる場合がある
-- **統計ブラケット**：現在は対応 2 群比較のみ（多重比較補正は未対応）
-- **Compose エクスポート**：PNG のみ対応（SVG / PDF は今後の予定）
+- **統計ブラケット**：Bonferroni / Holm 補正対応。2群比較のみの場合は補正不要
 
 ---
 
@@ -345,6 +347,7 @@ api/
 | v6 | 出力拡張 + CSV | PNG / SVG / PDF / EPS 出力 / 全 13 図種への CSV インポート / カラーパレット 4 プリセット |
 | v7 | OCR パイプライン | 画像 → Vision AI → FigureState 変換 / Canvas 手動点取り（折れ線・散布図）/ API キー設定 UI |
 | v8 | 統計系 | 箱ひげ図・バイオリン図・エラーバー / 統計有意差ブラケット（t 検定・Mann-Whitney）|
+| v9 | OCR 強化 + Compose 拡張 + 統計補正 | Tesseract.js フォールバック（APIキー不要）/ 画像前処理をブラウザ側 Canvas API に移行 / Compose の SVG・PDF エクスポート対応 / 多重比較補正（Bonferroni・Holm）|
 
 ---
 
@@ -357,8 +360,9 @@ api/
 - [x] OCR インポート（Vision AI + Canvas 手動点取り）
 - [x] 複数図合成（グリッド / 自由配置）
 - [x] 統計有意差ブラケット
-- [ ] Compose の SVG / PDF エクスポート
-- [ ] 統計検定の多重比較補正（Bonferroni・Holm）
+- [x] Compose の SVG / PDF エクスポート
+- [x] Tesseract.js フォールバック（APIキーなしで OCR）
+- [x] 統計検定の多重比較補正（Bonferroni・Holm）
 - [ ] プリセット保存・共有リンク（Supabase 連携）
 
 ### Could

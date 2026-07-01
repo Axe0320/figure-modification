@@ -1,6 +1,6 @@
 import type { FigureType } from '../types/figures'
 
-export type OcrProvider = 'claude' | 'openai' | 'gemini'
+export type OcrProvider = 'claude' | 'openai' | 'gemini' | 'tesseract'
 
 export interface OcrResult {
   extracted: Record<string, unknown>

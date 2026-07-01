@@ -1,11 +1,15 @@
 import type { FigureState, ComposeLayout } from '../../types/figures'
 
+type ComposeFormat = 'png' | 'svg' | 'pdf'
+
 interface Props {
   figures: FigureState[]
   layout: ComposeLayout
   onLayoutChange: (patch: Partial<ComposeLayout>) => void
   onReorder: (fromIdx: number, toIdx: number) => void
   onExport: () => void
+  onFormatChange: (fmt: ComposeFormat) => void
+  format: ComposeFormat
   exporting: boolean
 }
 
@@ -39,6 +43,8 @@ export default function ComposeSettings({
   onLayoutChange,
   onReorder,
   onExport,
+  onFormatChange,
+  format,
   exporting,
 }: Props) {
   return (
@@ -160,7 +166,23 @@ export default function ComposeSettings({
         </div>
       </div>
 
-      {/* Export */}
+      {/* Export format */}
+      <div>
+        <label className="block text-xs text-gray-500 mb-1.5">エクスポート形式</label>
+        <div className="flex gap-1.5">
+          {(['png', 'svg', 'pdf'] as const).map((f) => (
+            <button
+              key={f}
+              onClick={() => onFormatChange(f)}
+              style={btnStyle(format === f)}
+            >
+              {f.toUpperCase()}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Export button */}
       <button
         onClick={onExport}
         disabled={exporting || figures.length === 0}
@@ -180,7 +202,7 @@ export default function ComposeSettings({
             (e.currentTarget as HTMLButtonElement).style.background = '#6C63FF'
         }}
       >
-        {exporting ? '生成中...' : 'PNG をエクスポート'}
+        {exporting ? '生成中...' : `${format.toUpperCase()} をエクスポート`}
       </button>
     </div>
   )
