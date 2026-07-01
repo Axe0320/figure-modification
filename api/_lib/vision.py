@@ -136,43 +136,32 @@ def call_openai(image_b64: str, figure_type: str, schema: dict, api_key: str) ->
     return _parse_json_response(result['choices'][0]['message']['content'])
 
 
-# ------------------------------------------------------------------ Google Cloud Vision API
-def _parse_ocr_text(text: str, figure_type: str) -> dict:
-    """Parse raw OCR text into a rough structured format."""
-    tokens = text.replace(',', ' ').split()
-    nums: list[float] = []
-    for t in tokens:
-        try:
-            nums.append(float(t))
-        except ValueError:
-            pass
-
-    if figure_type in ('confusion_matrix', 'heatmap') and nums:
-        n = round(len(nums) ** 0.5)
-        if n >= 2 and n * n == len(nums):
-            grid = [nums[r * n:(r + 1) * n] for r in range(n)]
-            return {'matrix': grid}
-
-    return {
-        '_raw': text,
-        '_note': 'Google Cloud Vision APIの抽出結果です。構造を手動で修正してください。',
-    }
-
-
-def call_google_vision(image_b64: str, figure_type: str, api_key: str) -> dict:
+# ------------------------------------------------------------------ Gemini (Interactions API)
+def call_gemini(image_b64: str, figure_type: str, schema: dict, api_key: str) -> dict:
     import urllib.request
+    prompt = _build_prompt(figure_type, schema)
     body = json.dumps({
-        'requests': [{
-            'image': {'content': image_b64},
-            'features': [{'type': 'DOCUMENT_TEXT_DETECTION', 'maxResults': 1}],
-        }]
+        'model': 'gemini-3.5-flash',
+        'input': [
+            {'type': 'text', 'text': prompt},
+            {'type': 'image', 'data': image_b64, 'mime_type': 'image/png'},
+        ],
     }).encode()
-    url = f'https://vision.googleapis.com/v1/images:annotate?key={api_key}'
-    req = urllib.request.Request(url, data=body, headers={'Content-Type': 'application/json'})
+    req = urllib.request.Request(
+        'https://generativelanguage.googleapis.com/v1beta/interactions',
+        data=body,
+        headers={
+            'Content-Type': 'application/json',
+            'x-goog-api-key': api_key,
+        },
+    )
     with urllib.request.urlopen(req, timeout=30) as resp:
         result = json.loads(resp.read())
-    text = result['responses'][0].get('fullTextAnnotation', {}).get('text', '')
-    return _parse_ocr_text(text, figure_type)
+    # Interactions API response: output_text field
+    text = result.get('output_text') or ''.join(
+        p.get('text', '') for p in result.get('output', []) if isinstance(p, dict)
+    )
+    return _parse_json_response(text)
 
 
 # ------------------------------------------------------------------ dispatcher
@@ -182,6 +171,6 @@ def call_vision(image_b64: str, figure_type: str, schema: dict, provider: str, a
     elif provider == 'openai':
         return call_openai(image_b64, figure_type, schema, api_key)
     elif provider == 'gemini':
-        return call_google_vision(image_b64, figure_type, api_key)
+        return call_gemini(image_b64, figure_type, schema, api_key)
     else:
         raise ValueError(f'Unknown provider: {provider}')
