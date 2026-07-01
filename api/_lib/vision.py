@@ -141,7 +141,7 @@ def call_gemini(image_b64: str, figure_type: str, schema: dict, api_key: str) ->
     import urllib.request
     prompt = _build_prompt(figure_type, schema)
     body = json.dumps({
-        'model': 'gemini-3.5-flash',
+        'model': 'gemini-3.1-flash-lite',
         'input': [
             {'type': 'text', 'text': prompt},
             {'type': 'image', 'data': image_b64, 'mime_type': 'image/png'},

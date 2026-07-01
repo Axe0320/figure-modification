@@ -47,8 +47,7 @@ Pillow（Python）は Vercel の Python 3.12 環境でのバージョン制約�
 | 条件 | 処理 | 説明 |
 |---|---|---|
 | APIキーなし | Tesseract.js（ブラウザ） | テキスト・数値の抽出。混合行列・ヒートマップは数値グリッドを自動解析。それ以外は生テキストを返しユーザーが手動構造化 |
-| APIキーあり（Claude / GPT-4o） | Vision LLM | JSON スキーマ付きプロンプトで構造化データを直接取得 |
-| APIキーあり（Google） | Google Cloud Vision API | `DOCUMENT_TEXT_DETECTION` でテキスト・数値を抽出。混合行列・ヒートマップはグリッド自動解析、他は手動構造化 |
+| APIキーあり（Claude / GPT-4o / Gemini） | Vision LLM | JSON スキーマ付きプロンプトで構造化データを直接取得（Gemini: `gemini-3.1-flash-lite`、RPD=500） |
 
 ### ユーザー確認・修正
 
