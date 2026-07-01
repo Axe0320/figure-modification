@@ -147,7 +147,7 @@ def call_gemini(image_b64: str, figure_type: str, schema: dict, api_key: str) ->
         ]}],
         'generationConfig': {'maxOutputTokens': 2048},
     }).encode()
-    url = f'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={api_key}'
+    url = f'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key={api_key}'
     req = urllib.request.Request(url, data=body, headers={'Content-Type': 'application/json'})
     with urllib.request.urlopen(req, timeout=30) as resp:
         result = json.loads(resp.read())

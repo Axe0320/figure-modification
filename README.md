@@ -179,18 +179,26 @@ flowchart LR
     classDef ui     fill:#6C63FF,color:#fff,stroke:#4a44cc
     classDef proc   fill:#10B981,color:#fff,stroke:#059669
     classDef ai     fill:#F59E0B,color:#fff,stroke:#D97706
+    classDef local  fill:#6B7280,color:#fff,stroke:#4B5563
     classDef edit   fill:#3B82F6,color:#fff,stroke:#2563EB
 
     UP([画像アップロード\nPNG / JPG / WebP]):::ui
     TYPE([図種選択\n13 種類]):::ui
-    PROV([プロバイダ選択\nClaude / GPT-4o / Gemini]):::ui
+    PROV([解析方法選択]):::ui
+    PRE["Canvas API 前処理\n（リサイズ・コントラスト）"]:::proc
 
-    subgraph FLOW["Vision AI フロー"]
+    subgraph VFLOW["Vision AI フロー\nClaude / GPT-4o / Gemini 2.0 Flash"]
         direction TB
-        PRE["Pillow 前処理\n（リサイズ・コントラスト）"]:::proc
-        VISION["Vision API 呼び出し\nJSON スキーマ付きプロンプト"]:::ai
+        VISION["Vision LLM 呼び出し\nJSON スキーマ付きプロンプト"]:::ai
         PARSE["JSON 解析\n抽出データ検証"]:::proc
-        PRE --> VISION --> PARSE
+        VISION --> PARSE
+    end
+
+    subgraph TFLOW["Tesseract フロー\n（APIキー不要・ブラウザ内）"]
+        direction TB
+        TESS["Tesseract.js\nテキスト・数値抽出"]:::local
+        GRID["グリッド解析\n混合行列・ヒートマップのみ"]:::local
+        TESS --> GRID
     end
 
     subgraph DIG["手動点取りフロー\n（折れ線・散布図のみ）"]
@@ -203,10 +211,12 @@ flowchart LR
     CONFIRM["OcrConfirm\nJSON 確認・編集"]:::edit
     APPLY([新規図として適用]):::ui
 
-    UP --> TYPE --> PROV
-    PROV -->|"line_plot / scatter_plot 以外"| PRE
+    UP --> TYPE --> PROV --> PRE
+    PRE -->|"APIキーあり"| VISION
+    PRE -->|"APIキーなし"| TESS
     PROV -->|"line_plot / scatter_plot"| CALIB
     PARSE --> CONFIRM
+    GRID --> CONFIRM
     CLICK --> CONFIRM
     CONFIRM --> APPLY
 ```
@@ -261,7 +271,7 @@ classDiagram
 | 永続化 | IndexedDB（idb） |
 | バックエンド | Vercel Functions（Python 3.12） |
 | 図表描画 | matplotlib 3.8 + seaborn 0.13 + numpy 1.26 |
-| Vision AI | Anthropic SDK ≥ 0.40（Claude Vision） |
+| Vision AI | Claude Vision / GPT-4o / Gemini 2.0 Flash（LLM による構造化抽出） |
 | エラー監視 | Sentry（React + Python） |
 | AI アシスタント | Claude Code（Anthropic） |
 | デプロイ | Vercel |
