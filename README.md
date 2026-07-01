@@ -187,7 +187,7 @@ flowchart LR
     PROV([解析方法選択]):::ui
     PRE["Canvas API 前処理\n（リサイズ・コントラスト）"]:::proc
 
-    subgraph VFLOW["Vision AI フロー\nClaude / GPT-4o / Gemini 2.0 Flash"]
+    subgraph VFLOW["Vision AI フロー\nClaude / GPT-4o / Google Cloud Vision"]
         direction TB
         VISION["Vision LLM 呼び出し\nJSON スキーマ付きプロンプト"]:::ai
         PARSE["JSON 解析\n抽出データ検証"]:::proc
@@ -271,7 +271,7 @@ classDiagram
 | 永続化 | IndexedDB（idb） |
 | バックエンド | Vercel Functions（Python 3.12） |
 | 図表描画 | matplotlib 3.8 + seaborn 0.13 + numpy 1.26 |
-| Vision AI | Claude Vision / GPT-4o / Gemini 2.0 Flash（LLM による構造化抽出） |
+| Vision AI | Claude Vision / GPT-4o / Google Cloud Vision API |
 | エラー監視 | Sentry（React + Python） |
 | AI アシスタント | Claude Code（Anthropic） |
 | デプロイ | Vercel |
