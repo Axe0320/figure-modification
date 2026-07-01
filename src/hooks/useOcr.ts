@@ -10,6 +10,7 @@ export type OcrStatus = 'idle' | 'processing' | 'done' | 'error'
 export interface OcrState {
   status: OcrStatus
   extracted: Record<string, unknown> | null
+  detectedType: FigureType | null
   error: string | null
 }
 
@@ -20,10 +21,10 @@ const PROVIDER_KEY: Record<Exclude<OcrProvider, 'tesseract'>, string> = {
 }
 
 export function useOcr() {
-  const [state, setState] = useState<OcrState>({ status: 'idle', extracted: null, error: null })
+  const [state, setState] = useState<OcrState>({ status: 'idle', extracted: null, detectedType: null, error: null })
 
-  const run = useCallback(async (imageB64: string, type: FigureType, provider: OcrProvider) => {
-    setState({ status: 'processing', extracted: null, error: null })
+  const run = useCallback(async (imageB64: string, type: FigureType | 'auto', provider: OcrProvider) => {
+    setState({ status: 'processing', extracted: null, detectedType: null, error: null })
 
     try {
       if (provider === 'tesseract') {
@@ -39,7 +40,7 @@ export function useOcr() {
       }
 
       const result = await runOcr(imageB64, type, provider, apiKey)
-      setState({ status: 'done', extracted: result.extracted, error: null })
+      setState({ status: 'done', extracted: result.extracted, detectedType: result.type, error: null })
     } catch (e) {
       setState({
         status: 'error',
@@ -49,7 +50,7 @@ export function useOcr() {
     }
   }, [])
 
-  const reset = useCallback(() => setState({ status: 'idle', extracted: null, error: null }), [])
+  const reset = useCallback(() => setState({ status: 'idle', extracted: null, detectedType: null, error: null }), [])
 
   return { ...state, run, reset }
 }

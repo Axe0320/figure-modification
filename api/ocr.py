@@ -27,7 +27,16 @@ class handler(BaseHTTPRequestHandler):
             self._respond(400, {'error': 'APIキーが必要です'})
             return
 
-        from _lib.vision import SCHEMAS, call_vision
+        from _lib.vision import SCHEMAS, call_vision, classify_and_extract
+
+        if figure_type == 'auto':
+            try:
+                result = classify_and_extract(image_b64, SCHEMAS, provider, api_key)
+                detected_type = result.pop('type', '')
+                self._respond(200, {'extracted': result, 'type': detected_type})
+            except Exception as e:
+                self._respond(500, {'error': str(e)})
+            return
 
         schema = SCHEMAS.get(figure_type)
         if schema is None:

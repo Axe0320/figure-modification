@@ -185,6 +185,90 @@ def call_gemini(image_b64: str, figure_type: str, schema: dict, api_key: str) ->
     return _parse_json_response(text)
 
 
+# ------------------------------------------------------------------ auto classify + extract
+def _build_auto_prompt(schemas: dict) -> str:
+    type_list = '\n'.join(f'- {k}: {FIGURE_TYPE_JA.get(k, k)}' for k in schemas)
+    schema_str = json.dumps(schemas, ensure_ascii=False)
+    return (
+        'この画像のグラフを分析し、以下の手順で回答してください。\n\n'
+        '【手順1】グラフの種類を以下から判定する:\n'
+        f'{type_list}\n\n'
+        '【手順2】判定した種類のスキーマに従いデータを抽出する。\n\n'
+        f'【スキーマ一覧】\n{schema_str}\n\n'
+        '【レスポンス形式】JSONのみ返してください。\n'
+        'typeフィールドに種類の英語キーを含め、そのスキーマのフィールドを展開してください。\n'
+        '例: {"type": "bar_chart", "labels": [...], "values": [...]}\n\n'
+        '注意:\n'
+        '- typeフィールドは必ず含める（上記リストの英語キーをそのまま使用）\n'
+        '- 数値は軸の目盛りから正確に読み取る\n'
+        '- 推定が難しい値は 0 とする（nullは使わない）\n'
+        '- JSONのみ返す（前後の説明文不要）'
+    )
+
+
+def classify_and_extract(image_b64: str, schemas: dict, provider: str, api_key: str) -> dict:
+    import urllib.request
+    prompt = _build_auto_prompt(schemas)
+
+    if provider == 'claude':
+        import anthropic
+        client = anthropic.Anthropic(api_key=api_key)
+        message = client.messages.create(
+            model='claude-opus-4-5-20251101',
+            max_tokens=2048,
+            messages=[{'role': 'user', 'content': [
+                {'type': 'image', 'source': {'type': 'base64', 'media_type': 'image/png', 'data': image_b64}},
+                {'type': 'text', 'text': prompt},
+            ]}],
+        )
+        return _parse_json_response(message.content[0].text)
+
+    elif provider == 'openai':
+        body = json.dumps({
+            'model': 'gpt-4o',
+            'messages': [{'role': 'user', 'content': [
+                {'type': 'text', 'text': prompt},
+                {'type': 'image_url', 'image_url': {'url': f'data:image/png;base64,{image_b64}'}},
+            ]}],
+            'max_tokens': 2048,
+        }).encode()
+        req = urllib.request.Request(
+            'https://api.openai.com/v1/chat/completions',
+            data=body,
+            headers={'Authorization': f'Bearer {api_key}', 'Content-Type': 'application/json'},
+        )
+        with urllib.request.urlopen(req, timeout=60) as resp:
+            result = json.loads(resp.read())
+        return _parse_json_response(result['choices'][0]['message']['content'])
+
+    elif provider == 'gemini':
+        body = json.dumps({
+            'model': 'gemini-3.1-flash-lite',
+            'input': [
+                {'type': 'text', 'text': prompt},
+                {'type': 'image', 'data': image_b64, 'mime_type': 'image/png'},
+            ],
+        }).encode()
+        req = urllib.request.Request(
+            'https://generativelanguage.googleapis.com/v1beta/interactions',
+            data=body,
+            headers={'Content-Type': 'application/json', 'x-goog-api-key': api_key},
+        )
+        with urllib.request.urlopen(req, timeout=60) as resp:
+            result = json.loads(resp.read())
+        text = next(
+            (part.get('text', '')
+             for step in result.get('steps', [])
+             if step.get('type') == 'model_output'
+             for part in step.get('content', [])
+             if isinstance(part, dict) and part.get('type') == 'text'),
+            '',
+        )
+        return _parse_json_response(text)
+
+    raise ValueError(f'Unknown provider: {provider}')
+
+
 # ------------------------------------------------------------------ dispatcher
 def call_vision(image_b64: str, figure_type: str, schema: dict, provider: str, api_key: str) -> dict:
     if provider == 'claude':

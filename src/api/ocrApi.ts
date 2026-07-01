@@ -9,7 +9,7 @@ export interface OcrResult {
 
 export async function runOcr(
   imageB64: string,
-  type: FigureType,
+  type: FigureType | 'auto',
   provider: OcrProvider,
   apiKey: string,
 ): Promise<OcrResult> {

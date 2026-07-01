@@ -66,47 +66,59 @@ export default function PointDigitizer({ imageUrl, onComplete, onCancel }: Props
     ctx.clearRect(0, 0, canvas.width, canvas.height)
     ctx.drawImage(img, 0, 0, canvas.width, canvas.height)
 
+    // helper: draw text with white outline for readability on any background
+    const drawLabel = (text: string, x: number, y: number, bold = false, size = 11) => {
+      ctx.font = `${bold ? 'bold ' : ''}${size}px sans-serif`
+      ctx.strokeStyle = 'white'
+      ctx.lineWidth = 3
+      ctx.strokeText(text, x, y)
+      ctx.fillStyle = '#1F2937'
+      ctx.fillText(text, x, y)
+    }
+
     // Draw calib points
     const calibColors: Record<string, string> = { x1: '#E74C3C', x2: '#E74C3C', y1: '#3498DB', y2: '#3498DB' }
     CALIB_ORDER.forEach(k => {
       const pt = calib[k]
       if (!pt) return
       ctx.beginPath()
-      ctx.arc(pt.px, pt.py, 6, 0, Math.PI * 2)
+      ctx.arc(pt.px, pt.py, 9, 0, Math.PI * 2)
       ctx.fillStyle = calibColors[k]
       ctx.fill()
       ctx.strokeStyle = 'white'
       ctx.lineWidth = 2
       ctx.stroke()
-      ctx.fillStyle = 'white'
-      ctx.font = 'bold 10px sans-serif'
-      ctx.fillText(k.toUpperCase(), pt.px + 8, pt.py - 4)
+      drawLabel(k.toUpperCase(), pt.px + 11, pt.py - 5, true, 12)
     })
 
     // Draw pending click
     if (pendingClick) {
       ctx.beginPath()
-      ctx.arc(pendingClick.px, pendingClick.py, 5, 0, Math.PI * 2)
-      ctx.fillStyle = 'rgba(255,165,0,0.8)'
+      ctx.arc(pendingClick.px, pendingClick.py, 8, 0, Math.PI * 2)
+      ctx.fillStyle = 'rgba(255,165,0,0.85)'
       ctx.fill()
+      ctx.strokeStyle = 'white'
+      ctx.lineWidth = 2
+      ctx.stroke()
     }
 
     // Draw data points
     const x1 = calib.x1; const x2 = calib.x2; const y1 = calib.y1; const y2 = calib.y2
     currentPoints.forEach((pt, i) => {
       ctx.beginPath()
-      ctx.arc(pt.px, pt.py, 5, 0, Math.PI * 2)
+      ctx.arc(pt.px, pt.py, 8, 0, Math.PI * 2)
       ctx.fillStyle = '#6C63FF'
       ctx.fill()
+      ctx.strokeStyle = 'white'
+      ctx.lineWidth = 2
+      ctx.stroke()
       if (x1 && x2 && y1 && y2) {
         const d = pixelToData(pt.px, pt.py, x1, x2, y1, y2)
-        ctx.fillStyle = 'white'
-        ctx.font = '9px sans-serif'
-        ctx.fillText(`(${d.x.toFixed(2)}, ${d.y.toFixed(2)})`, pt.px + 7, pt.py - 4)
+        drawLabel(`(${d.x.toFixed(2)}, ${d.y.toFixed(2)})`, pt.px + 10, pt.py - 6)
       }
       ctx.fillStyle = 'white'
-      ctx.font = 'bold 9px sans-serif'
-      ctx.fillText(String(i + 1), pt.px - 3, pt.py + 3)
+      ctx.font = 'bold 11px sans-serif'
+      ctx.fillText(String(i + 1), pt.px - 4, pt.py + 4)
     })
   }, [calib, pendingClick, currentPoints])
 
@@ -180,7 +192,7 @@ export default function PointDigitizer({ imageUrl, onComplete, onCancel }: Props
     <div className="flex flex-col gap-3 h-full" style={{ minHeight: 0 }}>
       {/* instruction bar */}
       <div className="flex items-center gap-3 py-2 px-3 rounded-xl text-xs"
-        style={{ background: '#F0EFFE', color: '#5850c3' }}>
+        style={{ background: '#F0EFFE', color: '#1F2937' }}>
         <span className="font-bold">{CALIB_LABELS[calibStep]}</span>
         {!isCalibDone && (
           <span className="text-gray-500">軸の較正: {calibProgress}/4 完了</span>
@@ -202,7 +214,7 @@ export default function PointDigitizer({ imageUrl, onComplete, onCancel }: Props
         </div>
 
         {/* side panel */}
-        <div className="flex flex-col gap-2" style={{ width: 180, minWidth: 180 }}>
+        <div className="flex flex-col gap-2" style={{ width: 260, minWidth: 260 }}>
           {/* calibration value input */}
           {!isCalibDone && (
             <div className="rounded-xl p-3 space-y-2" style={{ border: '1px solid #E5E7EB' }}>

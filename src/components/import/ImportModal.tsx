@@ -45,8 +45,8 @@ const VISION_PROVIDERS: { value: Exclude<OcrProvider, 'tesseract'>; label: strin
   { value: 'gemini',  label: 'Gemini',  key: 'ocr_google_key' },
 ]
 
-// line/scatter need manual digitization, not OCR
-const DIGITIZE_TYPES: FigureType[] = ['line_plot', 'scatter_plot']
+// all types now use LLM OCR; PointDigitizer kept for potential future use
+const DIGITIZE_TYPES: FigureType[] = []
 
 export default function ImportModal({ onApply, onClose }: Props) {
   const fileInputRef = useRef<HTMLInputElement>(null)
@@ -55,10 +55,11 @@ export default function ImportModal({ onApply, onClose }: Props) {
   const [imageUrl, setImageUrl]   = useState<string | null>(null)
   const [imageB64, setImageB64]   = useState<string | null>(null)
   const [figType, setFigType]     = useState<FigureType>('bar_chart')
+  const [autoDetect, setAutoDetect] = useState(true)
   const [provider, setProvider]   = useState<OcrProvider>('claude')
   const [dragging, setDragging]   = useState(false)
 
-  const { status, extracted, error, run, reset } = useOcr()
+  const { status, extracted, detectedType, error, run, reset } = useOcr()
 
   // Auto-select Tesseract when no Vision API key is available
   useEffect(() => {
@@ -98,22 +99,19 @@ export default function ImportModal({ onApply, onClose }: Props) {
 
   const handleAnalyze = async () => {
     if (!imageB64) return
-    if (DIGITIZE_TYPES.includes(figType)) {
-      setStep('digitize')
-      return
-    }
-    await run(imageB64, figType, provider)
+    await run(imageB64, autoDetect ? 'auto' : figType, provider)
   }
 
   const [manualExtracted, setManualExtracted] = useState<Record<string, unknown> | null>(null)
 
-  // When OCR finishes, switch to confirm step
+  // When OCR finishes, update figType from auto-detect then switch to confirm step
   useEffect(() => {
     if (status === 'done' && extracted) {
+      if (detectedType) setFigType(detectedType)
       setManualExtracted(null)
       setStep('confirm')
     }
-  }, [status, extracted])
+  }, [status, extracted, detectedType])
 
   const handleDigitizerComplete = (series: DigitizerSeries[]) => {
     const synth = { series: series.map(s => ({ name: s.name, x: s.x, y: s.y })) }
@@ -198,16 +196,31 @@ export default function ImportModal({ onApply, onClose }: Props) {
               {/* figure type selector */}
               <div className="mt-4 space-y-2">
                 <label className="text-xs font-semibold text-gray-600">図の種類</label>
-                <div className="grid gap-1" style={{ gridTemplateColumns: 'repeat(4, 1fr)' }}>
+                {/* auto-detect toggle */}
+                <button
+                  onClick={() => setAutoDetect(true)}
+                  className="w-full text-xs py-1.5 px-3 rounded-lg font-semibold transition-colors"
+                  style={{
+                    background: autoDetect ? '#6C63FF' : '#F3F4F6',
+                    color: autoDetect ? 'white' : '#374151',
+                  }}
+                >
+                  自動検出（推奨）
+                </button>
+                {/* manual type grid */}
+                <div
+                  className="grid gap-1 transition-opacity"
+                  style={{ gridTemplateColumns: 'repeat(4, 1fr)', opacity: autoDetect ? 0.4 : 1 }}
+                >
                   {ALL_TYPES.map(t => (
                     <button
                       key={t}
-                      onClick={() => setFigType(t)}
+                      onClick={() => { setFigType(t); setAutoDetect(false) }}
                       className="text-xs py-1.5 px-2 rounded-lg font-medium transition-colors"
                       style={{
-                        background: figType === t ? '#6C63FF' : '#F3F4F6',
-                        color: figType === t ? 'white' : '#374151',
-                        border: figType === t ? 'none' : '1px solid transparent',
+                        background: !autoDetect && figType === t ? '#6C63FF' : '#F3F4F6',
+                        color: !autoDetect && figType === t ? 'white' : '#374151',
+                        border: !autoDetect && figType === t ? 'none' : '1px solid transparent',
                       }}
                     >
                       {TYPE_JA[t]}
@@ -268,11 +281,6 @@ export default function ImportModal({ onApply, onClose }: Props) {
                 </div>
               )}
 
-              {DIGITIZE_TYPES.includes(figType) && (
-                <p className="text-xs text-blue-600 mt-2">
-                  この図種はCanvas上で手動点取りを行います（Vision AIは使いません）
-                </p>
-              )}
 
               {error && (
                 <p className="text-xs text-red-500 mt-2 p-2 rounded-lg" style={{ background: '#FEF2F2' }}>
@@ -298,11 +306,7 @@ export default function ImportModal({ onApply, onClose }: Props) {
                     cursor: (!imageUrl || status === 'processing') ? 'not-allowed' : 'pointer',
                   }}
                 >
-                  {status === 'processing'
-                    ? '解析中...'
-                    : DIGITIZE_TYPES.includes(figType)
-                      ? '手動点取りを開始'
-                      : '解析開始'}
+                  {status === 'processing' ? '解析中...' : '解析開始'}
                 </button>
               </div>
             </>
