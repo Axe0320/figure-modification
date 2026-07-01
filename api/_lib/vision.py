@@ -152,19 +152,21 @@ def call_openai(image_b64: str, figure_type: str, schema: dict, api_key: str) ->
     return _parse_json_response(result['choices'][0]['message']['content'])
 
 
-# ------------------------------------------------------------------ Gemini (Interactions API)
+# ------------------------------------------------------------------ Gemini (generateContent API)
 def call_gemini(image_b64: str, figure_type: str, schema: dict, api_key: str) -> dict:
     import urllib.request
     prompt = _build_prompt(figure_type, schema)
     body = json.dumps({
-        'model': 'gemini-3.1-flash-lite',
-        'input': [
-            {'type': 'text', 'text': prompt},
-            {'type': 'image', 'data': image_b64, 'mime_type': 'image/png'},
-        ],
+        'contents': [{
+            'parts': [
+                {'text': prompt},
+                {'inline_data': {'mime_type': 'image/png', 'data': image_b64}},
+            ],
+        }],
+        'generationConfig': {'temperature': 0.0},
     }).encode()
     req = urllib.request.Request(
-        'https://generativelanguage.googleapis.com/v1beta/interactions',
+        'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent',
         data=body,
         headers={
             'Content-Type': 'application/json',
@@ -173,10 +175,7 @@ def call_gemini(image_b64: str, figure_type: str, schema: dict, api_key: str) ->
     )
     with urllib.request.urlopen(req, timeout=30) as resp:
         result = json.loads(resp.read())
-    # Interactions API response: output_text field
-    text = result.get('output_text') or ''.join(
-        p.get('text', '') for p in result.get('output', []) if isinstance(p, dict)
-    )
+    text = result['candidates'][0]['content']['parts'][0]['text']
     return _parse_json_response(text)
 
 
