@@ -45,7 +45,7 @@ export default function ManualGroupInput({ initGroups, onChange, minGroups = 1 }
             {groups.length > minGroups && (
               <button
                 onClick={() => removeGroup(i)}
-                style={{ fontSize: 11, color: '#9CA3AF', background: 'none', border: 'none', cursor: 'pointer' }}
+                style={{ fontSize: 11, color: '#EF4444', background: 'none', border: 'none', cursor: 'pointer' }}
               >削除</button>
             )}
           </div>

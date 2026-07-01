@@ -55,7 +55,7 @@ export default function ManualSeriesInput({
             {list.length > minSeries && (
               <button
                 onClick={() => removeSeries(i)}
-                style={{ fontSize: 11, color: '#9CA3AF', background: 'none', border: 'none', cursor: 'pointer', padding: 0, whiteSpace: 'nowrap' }}
+                style={{ fontSize: 11, color: '#EF4444', background: 'none', border: 'none', cursor: 'pointer', padding: 0, whiteSpace: 'nowrap' }}
               >削除</button>
             )}
           </div>

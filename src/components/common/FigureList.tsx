@@ -116,7 +116,7 @@ export default function FigureList({ figures, selectedId, onSelect, onDelete, on
                   className="leading-none text-base transition-opacity"
                   style={{
                     opacity: hovered ? 1 : 0.4,
-                    color: selected ? '#A78BFA' : '#9CA3AF',
+                    color: '#EF4444',
                   }}
                 >
                   ×

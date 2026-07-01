@@ -88,6 +88,10 @@ export default function SpreadsheetTable({ columns, rows, onChange, onAddColumn,
     onChange(stripTrailing(next))
   }
 
+  const handleAddRow = () => {
+    setPendingFocus([displayRows.length - 1, 0])
+  }
+
   return (
     <div ref={containerRef} style={{ overflowX: 'auto', borderRadius: 6, border: '1px solid #E5E7EB' }}>
       <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 11 }}>
@@ -170,6 +174,14 @@ export default function SpreadsheetTable({ columns, rows, onChange, onAddColumn,
           ))}
         </tbody>
       </table>
+      <div style={{ textAlign: 'right', borderTop: '1px solid #E5E7EB', padding: '2px 4px' }}>
+        <button
+          onClick={handleAddRow}
+          style={{ fontSize: 10, color: '#6C63FF', background: 'none', border: 'none', cursor: 'pointer', padding: '2px 4px', fontWeight: 600 }}
+        >
+          ＋ 行を追加
+        </button>
+      </div>
     </div>
   )
 }

@@ -167,7 +167,7 @@ export default function LearningInput({ data, onChange }: Props) {
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <span style={{ fontSize: 12, fontWeight: 600, color: '#374151' }}>系列 {i + 1}</span>
                 {seriesUI.length > 1 && (
-                  <button onClick={() => handleRemove(i)} style={{ fontSize: 11, color: '#9CA3AF', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>削除</button>
+                  <button onClick={() => handleRemove(i)} style={{ fontSize: 11, color: '#EF4444', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}>削除</button>
                 )}
               </div>
               <input

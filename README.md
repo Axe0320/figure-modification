@@ -74,7 +74,8 @@ matplotlib の図をブラウザ UI で編集・ダウンロードできる、�
 
 ### データ入力
 
-- **手入力 / テキスト貼り付け**：各図種専用 UI から直接入力
+- **手入力モード**：全 16 図種に対応したスプレッドシート形式のテーブル UI。Tab / Enter でセル間移動、Excel・Google スプレッドシートからの TSV 貼り付けに対応。行・列の追加（＋）、列・系列・グループの削除（×）もワンクリックで操作可能
+- **CSV / 貼り付けモード**：テキストエリアへのタブ区切りデータ貼り付け、または CSV ファイルのアップロード
 - **sklearn 貼り付け**：`print(confusion_matrix(...))` 等の Python 出力をそのまま貼り付け
 - **CSV アップロード**：全 16 図種に対応。ヒートマップは行・列ヘッダーを自動検出、学習曲線はヘッダー行を系列名として使用
 - **OCR インポート**：図の画像をアップロードして Vision AI でデータを自動抽出（後述）
@@ -155,7 +156,7 @@ flowchart TD
         CMP["POST /api/compose"]:::api
         OCR2["POST /api/ocr"]:::api
         STAT["POST /api/stat_test"]:::api
-        LIB["api/_lib/\n16 図種レンダラー\n（matplotlib + seaborn）"]:::render
+        LIB["api/_lib/<br/>16 図種レンダラー<br/>（matplotlib + seaborn）"]:::render
         RND --> LIB
         CMP --> LIB
     end
@@ -173,7 +174,7 @@ flowchart TD
     ZU --> IDB
     RND -->|base64| IDB
     ZU --> CMP
-    STAT -->|ブラケット座標| ZU
+    STAT -->|p値・座標| ZU
     IDB --> PNG
     RND --> SVG & PDF & EPS
 ```
@@ -189,30 +190,30 @@ flowchart TD
     classDef edit  fill:#3B82F6,color:#fff,stroke:#2563EB
 
     UP([画像アップロード]):::ui
-    PRE["Canvas API 前処理\nリサイズ・コントラスト"]:::proc
+    PRE["Canvas API 前処理<br/>リサイズ・コントラスト"]:::proc
     TYPE([図種選択 16種類]):::ui
     PROV([解析方法選択]):::ui
 
     UP --> PRE
     PRE --> TYPE --> PROV
 
-    PROV -->|"Claude / GPT-4o / Gemini"| VISION
-    PROV -->|"Tesseract（APIキー不要）"| TESS
-    PROV -->|"折れ線・散布図"| CALIB
+    PROV -->|"Vision AI"| VISION
+    PROV -->|"Tesseract"| TESS
+    PROV -->|"折れ線・散布図のみ"| CALIB
 
-    VISION["Vision LLM 呼び出し\nJSON スキーマ付きプロンプト"]:::ai
+    VISION["Vision LLM 呼び出し<br/>JSON スキーマ付きプロンプト"]:::ai
     PARSE["JSON 解析・検証"]:::proc
     VISION --> PARSE
 
-    TESS["Tesseract.js\nブラウザ内テキスト抽出"]:::local
-    GRID["グリッド解析\n混合行列・ヒートマップのみ自動変換"]:::local
+    TESS["Tesseract.js<br/>ブラウザ内テキスト抽出"]:::local
+    GRID["グリッド解析<br/>混合行列・ヒートマップのみ自動変換"]:::local
     TESS --> GRID
 
-    CALIB["4点軸較正\nX1, X2, Y1, Y2"]:::proc
-    CLICK["Canvas クリックで点追加\nピクセル → データ座標変換"]:::proc
+    CALIB["4点軸較正<br/>X1, X2, Y1, Y2"]:::proc
+    CLICK["Canvas クリックで点追加<br/>ピクセル → データ座標変換"]:::proc
     CALIB --> CLICK
 
-    CONFIRM["OcrConfirm\nJSON 確認・編集"]:::edit
+    CONFIRM["OcrConfirm<br/>JSON 確認・編集"]:::edit
     APPLY([新規図として適用]):::ui
 
     PARSE --> CONFIRM
@@ -305,6 +306,15 @@ npm run build
 src/
 ├── components/
 │   ├── input/          # 図種別データ入力 UI（16 種）
+│   │   └── DataInput/           # 手入力モード共通コンポーネント
+│   │       ├── SpreadsheetTable.tsx     # スプレッドシートグリッド（Tab/Enter/TSV貼り付け）
+│   │       ├── InputModeToggle.tsx      # 手入力 ↔ CSV タブ切り替え
+│   │       ├── ManualTableInput.tsx     # 棒・積み上げ・折れ線用
+│   │       ├── ManualLearningInput.tsx  # 学習曲線用（左右軸切り替え付き）
+│   │       ├── ManualSeriesInput.tsx    # 散布図・ROC・PR 用（系列カード型）
+│   │       ├── ManualGroupInput.tsx     # 箱ひげ・バイオリン用（グループカード型）
+│   │       ├── ManualErrorBarInput.tsx  # エラーバー用（平均＋誤差ペア列）
+│   │       └── ManualComboInput.tsx     # 棒+折れ線複合用（2テーブル同時編集）
 │   ├── editor/         # パラメータ編集パネル（16 種）
 │   │   └── colorPalettes.tsx    # 4 プリセット共有コンポーネント
 │   ├── compose/        # 複数図合成 UI
@@ -360,6 +370,7 @@ api/
 | v8 | 統計系 | 箱ひげ図・バイオリン図・エラーバー / 統計有意差ブラケット（t 検定・Mann-Whitney）|
 | v9 | OCR 強化 + Compose 拡張 | Tesseract.js フォールバック / ブラウザ側 Canvas 前処理 / Compose SVG・PDF エクスポート / 多重比較補正（Bonferroni・Holm）|
 | v10 | 新図種 + タブ整理 | 積み上げ棒グラフ・棒+折れ線複合・円グラフ（ドーナツ対応）追加 / 図種タブをカテゴリ別に並び替え |
+| v11 | 手入力モード | 全 16 図種へスプレッドシート形式の手入力 UI を追加（Tab/Enter ナビ・TSV 貼り付け・列追加削除）|
 
 ---
 
@@ -377,6 +388,7 @@ api/
 - [x] Tesseract.js フォールバック（APIキーなしで OCR）
 - [x] 統計検定の多重比較補正（Bonferroni・Holm）
 - [x] 積み上げ棒グラフ・棒+折れ線複合・円グラフ
+- [x] 全 16 図種への手入力モード（スプレッドシート UI・TSV 貼り付け対応）
 - [ ] プリセット保存・共有リンク（Supabase 連携）
 
 ### Could
