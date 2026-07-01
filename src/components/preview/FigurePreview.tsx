@@ -21,9 +21,9 @@ export default function FigurePreview({ b64, loading, error, format, downloadLoa
   const disabled = !b64 || loading || downloadLoading
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col">
       <div
-        className="flex-1 flex items-start justify-center bg-white min-h-64 relative"
+        className="bg-white min-h-64 relative"
         style={{ border: '1px solid #E5E7EB', borderRadius: 14, boxShadow: 'var(--shadow-md)' }}
       >
         {loading && (
@@ -38,7 +38,7 @@ export default function FigurePreview({ b64, loading, error, format, downloadLoa
           </div>
         )}
         {!loading && !error && b64 && (
-          <img src={`data:image/png;base64,${b64}`} alt="Generated figure" className="max-w-full max-h-full object-contain p-4" />
+          <img src={`data:image/png;base64,${b64}`} alt="Generated figure" className="w-full h-auto block p-4" />
         )}
         {!loading && !error && !b64 && (
           <div className="absolute inset-0 flex items-center justify-center">
