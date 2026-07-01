@@ -28,14 +28,18 @@ export function useOcr() {
 
     try {
       if (provider === 'tesseract') {
+        if (type === 'auto') {
+          setState({ status: 'error', extracted: null, detectedType: null, error: 'Tesseract は自動検出に対応していません。図種を手動で選択してください。' })
+          return
+        }
         const result = await runTesseract(imageB64, type)
-        setState({ status: 'done', extracted: result, error: null })
+        setState({ status: 'done', extracted: result, detectedType: type, error: null })
         return
       }
 
       const apiKey = localStorage.getItem(PROVIDER_KEY[provider]) ?? ''
       if (!apiKey) {
-        setState({ status: 'error', extracted: null, error: `${provider} のAPIキーが未設定です。⚙️ から設定してください。` })
+        setState({ status: 'error', extracted: null, detectedType: null, error: `${provider} のAPIキーが未設定です。⚙️ から設定してください。` })
         return
       }
 
@@ -45,6 +49,7 @@ export function useOcr() {
       setState({
         status: 'error',
         extracted: null,
+        detectedType: null,
         error: e instanceof Error ? e.message : String(e),
       })
     }
