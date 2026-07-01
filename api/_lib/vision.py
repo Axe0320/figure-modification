@@ -51,6 +51,19 @@ SCHEMAS: dict[str, dict] = {
         'labels': ['Condition A', 'Condition B'],
         'series': [{'name': 'Series 1', 'means': [2.5, 4.0], 'errors': [0.3, 0.5]}],
     },
+    'stacked_bar': {
+        'labels': ['A', 'B', 'C'],
+        'values': [[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]],
+    },
+    'combo_chart': {
+        'labels': ['Q1', 'Q2', 'Q3', 'Q4'],
+        'bar_series': [{'name': 'Sales', 'values': [100.0, 150.0, 130.0, 200.0]}],
+        'line_series': [{'name': 'Growth Rate', 'values': [0.10, 0.50, -0.13, 0.54]}],
+    },
+    'pie_chart': {
+        'labels': ['A', 'B', 'C'],
+        'values': [30.0, 50.0, 20.0],
+    },
 }
 
 FIGURE_TYPE_JA: dict[str, str] = {
@@ -67,6 +80,9 @@ FIGURE_TYPE_JA: dict[str, str] = {
     'box_plot': '箱ひげ図',
     'violin_plot': 'バイオリンプロット',
     'error_bar': 'エラーバー',
+    'stacked_bar': '積み上げ棒グラフ',
+    'combo_chart': '棒+折れ線複合グラフ',
+    'pie_chart': '円グラフ',
 }
 
 

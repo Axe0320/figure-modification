@@ -47,23 +47,26 @@ matplotlib の図をブラウザ UI で編集・ダウンロードできる、�
 
 ---
 
-## 対応図種（13種類）
+## 対応図種（16種類）
 
 | カテゴリ | 図種 | 主な用途 |
 |--------|------|---------|
-| データ表現 | 混合行列 | 分類モデルの性能評価 |
-| データ表現 | ヒートマップ / 相関行列 | 特徴間相関・任意の2次元データ |
-| 基本グラフ | 棒グラフ | カテゴリ別比較（グループ対応・閾値線・その他統合付き）|
-| 基本グラフ | 折れ線グラフ | 時系列・連続値（複数系列・対数スケール対応）|
-| 基本グラフ | 散布図 | 2変数の分布（複数系列・透明度対応）|
-| 基本グラフ | ヒストグラム | 値の分布 |
+| 棒系 | 棒グラフ | カテゴリ別比較（グループ対応・閾値線・その他統合付き）|
+| 棒系 | 積み上げ棒グラフ | 構成比の比較（100%積み上げ対応）|
+| 棒系 | 棒+折れ線複合 | 棒グラフと折れ線の左右二軸重ね合わせ |
+| 線/点/円系 | 折れ線グラフ | 時系列・連続値（複数系列・対数スケール対応）|
+| 線/点/円系 | 散布図 | 2変数の分布（複数系列・透明度対応）|
+| 線/点/円系 | 円グラフ | 構成比の可視化（ドーナツグラフ対応）|
+| 分布系 | ヒストグラム | 値の分布 |
+| 分布系 | 箱ひげ図 | グループ間分布比較（有意差ブラケット付き）|
+| 分布系 | バイオリン図 | 分布の形状を含む比較（内部表示・エッジカラー対応）|
+| 分布系 | エラーバー | 平均値と誤差の比較（有意差ブラケット付き）|
+| 行列系 | ヒートマップ / 相関行列 | 特徴間相関・任意の2次元データ |
+| 行列系 | 混合行列 | 分類モデルの性能評価 |
 | ML 評価系 | ROC 曲線 | 分類器の閾値特性（AUC 表示・複数モデル対応）|
 | ML 評価系 | PR 曲線 | 不均衡データの評価（AP 表示）|
 | ML 評価系 | 学習曲線 | 訓練過程の可視化（左右二軸対応）|
 | ML 評価系 | 特徴量重要度 | 変数の寄与度（Top-N フィルタリング）|
-| 統計系 | 箱ひげ図 | グループ間分布比較（有意差ブラケット付き）|
-| 統計系 | バイオリン図 | 分布の形状を含む比較（内部表示・エッジカラー対応）|
-| 統計系 | エラーバー | 平均値と誤差の比較（有意差ブラケット付き）|
 
 ---
 
@@ -73,7 +76,7 @@ matplotlib の図をブラウザ UI で編集・ダウンロードできる、�
 
 - **手入力 / テキスト貼り付け**：各図種専用 UI から直接入力
 - **sklearn 貼り付け**：`print(confusion_matrix(...))` 等の Python 出力をそのまま貼り付け
-- **CSV アップロード**：全 13 図種に対応。ヒートマップは行・列ヘッダーを自動検出、学習曲線はヘッダー行を系列名として使用
+- **CSV アップロード**：全 16 図種に対応。ヒートマップは行・列ヘッダーを自動検出、学習曲線はヘッダー行を系列名として使用
 - **OCR インポート**：図の画像をアップロードして Vision AI でデータを自動抽出（後述）
 
 ### 編集機能
@@ -81,7 +84,7 @@ matplotlib の図をブラウザ UI で編集・ダウンロードできる、�
 - タイトル・軸ラベル・フォントサイズ・図サイズ（cm）・DPI
 - カラーマップ・カラーパレット（デフォルト / 学術 / パステル / ビビッドの 4 プリセット）
 - グリッド・凡例・軸範囲・目盛り間隔（全図種共通）
-- 図種固有パラメータ（正規化・括弧表示・inner 表示・エッジカラー等）
+- 図種固有パラメータ（正規化・100%積み上げ・ドーナツ穴・括弧表示・inner 表示等）
 - **統計有意差ブラケット**：Welch's t 検定・Mann-Whitney U 検定等で p 値を自動計算し、図上に直接描画
 
 ### 出力形式
@@ -97,8 +100,18 @@ matplotlib の図をブラウザ UI で編集・ダウンロードできる、�
 
 ### OCR インポート（図 → データ抽出）
 
-- アップロードした図画像を Claude / GPT-4o / Gemini 3.1 Flash Lite で解析しデータを自動抽出
-- API キーはブラウザの localStorage にのみ保存（サーバーには一切送信しない）
+図の画像を読み込み、データを自動抽出して新規図として追加する機能。
+
+**解析方法は4種類：**
+
+| 解析方法 | 特徴 | APIキー |
+|--------|------|--------|
+| **Claude** (claude-opus-4-5) | 高精度・グラフ構造の理解が得意 | Anthropic API キー要 |
+| **GPT-4o** | 高精度 | OpenAI API キー要 |
+| **Gemini 3.1 Flash Lite** | 高レートリミット・低コスト | Google AI API キー要 |
+| **Tesseract.js** | ブラウザ内実行・APIキー不要 | 不要（混合行列・ヒートマップ以外は手動修正推奨）|
+
+- API キーはブラウザの localStorage にのみ保存（サーバーには送信しない）
 - 抽出 JSON をテキストエリアで確認・編集してから適用
 - 折れ線・散布図は Canvas の **手動点取り**（4 点軸較正、WebPlotDigitizer 方式）も選択可能
 
@@ -126,97 +139,84 @@ flowchart TD
     classDef store  fill:#8B5CF6,color:#fff,stroke:#6D28D9
 
     subgraph IN["① 入力"]
-        direction TB
         M([手入力 / テキスト貼り付け]):::input
         C([CSV アップロード]):::input
         SK([sklearn 貼り付け]):::input
-        OCR([OCR インポート\n図画像 → Vision AI]):::input
+        OCR([OCR インポート]):::input
     end
 
     subgraph STORE["② 状態管理"]
-        ZU[(Zustand Store\nFigureState list)]:::store
-        IDB[(IndexedDB\nプレビューキャッシュ)]:::store
+        ZU[(Zustand Store)]:::store
+        IDB[(IndexedDB キャッシュ)]:::store
     end
 
     subgraph BACKEND["③ バックエンド（Vercel Functions）"]
-        direction TB
-        RND["POST /api/render\n単一図生成"]:::api
-        CMP["POST /api/compose\n複数図合成"]:::api
-        OCR2["POST /api/ocr\nVision AI 解析"]:::api
-        STAT["POST /api/stat_test\n統計検定"]:::api
-        LIB["api/_lib/\n13 図種レンダラー\n（matplotlib + seaborn）"]:::render
+        RND["POST /api/render"]:::api
+        CMP["POST /api/compose"]:::api
+        OCR2["POST /api/ocr"]:::api
+        STAT["POST /api/stat_test"]:::api
+        LIB["api/_lib/\n16 図種レンダラー\n（matplotlib + seaborn）"]:::render
         RND --> LIB
         CMP --> LIB
     end
 
     subgraph OUT["④ 出力"]
-        direction TB
         PNG([PNG]):::out
         SVG([SVG]):::out
         PDF([PDF]):::out
         EPS([EPS]):::out
     end
 
-    M --> ZU
-    C --> ZU
-    SK --> ZU
+    M & C & SK --> ZU
     OCR --> OCR2 --> ZU
-    ZU -->|"debounced"| RND
+    ZU -->|debounced| RND
     ZU --> IDB
-    RND -->|"base64"| IDB
+    RND -->|base64| IDB
     ZU --> CMP
-    STAT -->|"ブラケット座標"| ZU
+    STAT -->|ブラケット座標| ZU
     IDB --> PNG
-    RND --> SVG
-    RND --> PDF
-    RND --> EPS
+    RND --> SVG & PDF & EPS
 ```
 
 ### OCR パイプライン
 
 ```mermaid
-flowchart LR
-    classDef ui     fill:#6C63FF,color:#fff,stroke:#4a44cc
-    classDef proc   fill:#10B981,color:#fff,stroke:#059669
-    classDef ai     fill:#F59E0B,color:#fff,stroke:#D97706
-    classDef local  fill:#6B7280,color:#fff,stroke:#4B5563
-    classDef edit   fill:#3B82F6,color:#fff,stroke:#2563EB
+flowchart TD
+    classDef ui    fill:#6C63FF,color:#fff,stroke:#4a44cc
+    classDef proc  fill:#10B981,color:#fff,stroke:#059669
+    classDef ai    fill:#F59E0B,color:#fff,stroke:#D97706
+    classDef local fill:#6B7280,color:#fff,stroke:#4B5563
+    classDef edit  fill:#3B82F6,color:#fff,stroke:#2563EB
 
-    UP([画像アップロード\nPNG / JPG / WebP]):::ui
-    TYPE([図種選択\n13 種類]):::ui
+    UP([画像アップロード]):::ui
+    PRE["Canvas API 前処理\nリサイズ・コントラスト"]:::proc
+    TYPE([図種選択 16種類]):::ui
     PROV([解析方法選択]):::ui
-    PRE["Canvas API 前処理\n（リサイズ・コントラスト）"]:::proc
 
-    subgraph VFLOW["Vision AI フロー\nClaude / GPT-4o / Gemini 3.1 Flash Lite"]
-        direction TB
-        VISION["Vision LLM 呼び出し\nJSON スキーマ付きプロンプト"]:::ai
-        PARSE["JSON 解析\n抽出データ検証"]:::proc
-        VISION --> PARSE
-    end
+    UP --> PRE
+    PRE --> TYPE --> PROV
 
-    subgraph TFLOW["Tesseract フロー\n（APIキー不要・ブラウザ内）"]
-        direction TB
-        TESS["Tesseract.js\nテキスト・数値抽出"]:::local
-        GRID["グリッド解析\n混合行列・ヒートマップのみ"]:::local
-        TESS --> GRID
-    end
+    PROV -->|"Claude / GPT-4o / Gemini"| VISION
+    PROV -->|"Tesseract（APIキー不要）"| TESS
+    PROV -->|"折れ線・散布図"| CALIB
 
-    subgraph DIG["手動点取りフロー\n（折れ線・散布図のみ）"]
-        direction TB
-        CALIB["4点軸較正\n（X1, X2, Y1, Y2）"]:::proc
-        CLICK["Canvas クリックで点追加\nピクセル → データ座標変換"]:::proc
-        CALIB --> CLICK
-    end
+    VISION["Vision LLM 呼び出し\nJSON スキーマ付きプロンプト"]:::ai
+    PARSE["JSON 解析・検証"]:::proc
+    VISION --> PARSE
+
+    TESS["Tesseract.js\nブラウザ内テキスト抽出"]:::local
+    GRID["グリッド解析\n混合行列・ヒートマップのみ自動変換"]:::local
+    TESS --> GRID
+
+    CALIB["4点軸較正\nX1, X2, Y1, Y2"]:::proc
+    CLICK["Canvas クリックで点追加\nピクセル → データ座標変換"]:::proc
+    CALIB --> CLICK
 
     CONFIRM["OcrConfirm\nJSON 確認・編集"]:::edit
     APPLY([新規図として適用]):::ui
 
-    UP --> TYPE --> PROV --> PRE
-    PRE -->|"APIキーあり"| VISION
-    PRE -->|"APIキーなし"| TESS
-    PROV -->|"line_plot / scatter_plot"| CALIB
     PARSE --> CONFIRM
-    GRID --> CONFIRM
+    GRID  --> CONFIRM
     CLICK --> CONFIRM
     CONFIRM --> APPLY
 ```
@@ -271,7 +271,8 @@ classDiagram
 | 永続化 | IndexedDB（idb） |
 | バックエンド | Vercel Functions（Python 3.12） |
 | 図表描画 | matplotlib 3.8 + seaborn 0.13 + numpy 1.26 |
-| Vision AI | Claude Vision / GPT-4o / Gemini 3.1 Flash Lite（全てマルチモーダル LLM）|
+| Vision AI | Claude Vision / GPT-4o / Gemini 3.1 Flash Lite |
+| OCR フォールバック | Tesseract.js（ブラウザ内 WASM 実行）|
 | エラー監視 | Sentry（React + Python） |
 | AI アシスタント | Claude Code（Anthropic） |
 | デプロイ | Vercel |
@@ -303,8 +304,8 @@ npm run build
 ```
 src/
 ├── components/
-│   ├── input/          # 図種別データ入力 UI（13 種）
-│   ├── editor/         # パラメータ編集パネル（13 種）
+│   ├── input/          # 図種別データ入力 UI（16 種）
+│   ├── editor/         # パラメータ編集パネル（16 種）
 │   │   └── colorPalettes.tsx    # 4 プリセット共有コンポーネント
 │   ├── compose/        # 複数図合成 UI
 │   ├── import/         # OCR インポート
@@ -325,21 +326,21 @@ src/
 ├── store/
 │   └── figureStore.ts  # Zustand（図データ + レイアウト）
 └── types/
-    └── figures.ts      # TypeScript 型定義（13 図種全て）
+    └── figures.ts      # TypeScript 型定義（16 図種全て）
 
 api/
-├── render.py           # POST /api/render（単一図生成）
+├── render.py           # POST /api/render（単一図生成・図種名で動的 import）
 ├── compose.py          # POST /api/compose（複数図合成）
 ├── ocr.py              # POST /api/ocr（Vision AI 連携）
 ├── stat_test.py        # POST /api/stat_test（統計検定）
-└── _lib/               # 図種別レンダラー（13 モジュール + vision.py）
+└── _lib/               # 図種別レンダラー（16 モジュール + common.py + vision.py）
 ```
 
 ---
 
 ## 制限事項
 
-- **OCR インポート**：Vision API キー未設定時は Tesseract.js（ブラウザ内）でフォールバック。混合行列・ヒートマップ以外は手動修正を推奨
+- **OCR インポート**：Tesseract.js は混合行列・ヒートマップ（数値格子）以外はグラフ構造の自動変換ができないため、手動修正が必要。Vision AI（Claude / GPT-4o / Gemini）は全16種に対応
 - **コールドスタート**：Vercel Functions の初回リクエストは最大 3 秒程度かかる場合がある
 - **統計ブラケット**：Bonferroni / Holm 補正対応。2群比較のみの場合は補正不要
 
@@ -348,24 +349,26 @@ api/
 ## Version History
 
 | Version | Focus | 主な追加機能 |
-|---|---|---|
+|---------|-------|------------|
 | v1 | 混合行列 MVP | Vercel デプロイ検証 / 混合行列の Create + 編集 UI + PNG 出力 / Sentry 導入 |
 | v2 | ヒートマップ | ヒートマップ（相関行列含む）/ セル値表示・カラーマップ・mask_upper |
 | v3 | Compose | グリッド配置・自由配置 / IndexedDB 移行 / 複数図の合成 PNG エクスポート |
 | v4 | 基本グラフ | 棒グラフ・折れ線・散布図（複数系列）・ヒストグラム / sklearn 貼り付け |
 | v5 | ML 評価系 | ROC 曲線・PR 曲線・学習曲線（双軸）・特徴量重要度（Top-N フィルタリング）|
-| v6 | 出力拡張 + CSV | PNG / SVG / PDF / EPS 出力 / 全 13 図種への CSV インポート / カラーパレット 4 プリセット |
+| v6 | 出力拡張 + CSV | PNG / SVG / PDF / EPS 出力 / 全図種への CSV インポート / カラーパレット 4 プリセット |
 | v7 | OCR パイプライン | 画像 → Vision AI → FigureState 変換 / Canvas 手動点取り（折れ線・散布図）/ API キー設定 UI |
 | v8 | 統計系 | 箱ひげ図・バイオリン図・エラーバー / 統計有意差ブラケット（t 検定・Mann-Whitney）|
-| v9 | OCR 強化 + Compose 拡張 + 統計補正 | Tesseract.js フォールバック（APIキー不要）/ 画像前処理をブラウザ側 Canvas API に移行 / Compose の SVG・PDF エクスポート対応 / 多重比較補正（Bonferroni・Holm）|
+| v9 | OCR 強化 + Compose 拡張 | Tesseract.js フォールバック / ブラウザ側 Canvas 前処理 / Compose SVG・PDF エクスポート / 多重比較補正（Bonferroni・Holm）|
+| v10 | 新図種 + タブ整理 | 積み上げ棒グラフ・棒+折れ線複合・円グラフ（ドーナツ対応）追加 / 図種タブをカテゴリ別に並び替え |
 
 ---
 
 ## Roadmap
 
 ### Should
+
 - [x] 出力形式選択（PNG / SVG / PDF / EPS）
-- [x] 全 13 図種への CSV インポート
+- [x] 全図種への CSV インポート
 - [x] カラーパレットプリセット（デフォルト / 学術 / パステル / ビビッド）
 - [x] OCR インポート（Vision AI + Canvas 手動点取り）
 - [x] 複数図合成（グリッド / 自由配置）
@@ -373,9 +376,11 @@ api/
 - [x] Compose の SVG / PDF エクスポート
 - [x] Tesseract.js フォールバック（APIキーなしで OCR）
 - [x] 統計検定の多重比較補正（Bonferroni・Holm）
+- [x] 積み上げ棒グラフ・棒+折れ線複合・円グラフ
 - [ ] プリセット保存・共有リンク（Supabase 連携）
 
 ### Could
+
 - [ ] 既存 3 ツールとの統合（pnpm workspace）
 - [ ] ダークモード
 - [ ] Plotly 等インタラクティブ図出力

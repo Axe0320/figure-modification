@@ -14,6 +14,9 @@ import type {
   BoxParams,             BoxState,
   ViolinParams,          ViolinState,
   ErrorBarParams,        ErrorBarState,
+  StackedBarParams,      StackedBarState,
+  ComboParams,           ComboState,
+  PieParams,             PieState,
 } from './types/figures'
 import { useFigureStore } from './store/figureStore'
 import { getPreview } from './cache/previewCache'
@@ -32,6 +35,9 @@ import FeatureInput from './components/input/FeatureInput'
 import BoxInput from './components/input/BoxInput'
 import ViolinInput from './components/input/ViolinInput'
 import ErrorBarInput from './components/input/ErrorBarInput'
+import StackedBarInput from './components/input/StackedBarInput'
+import ComboChartInput from './components/input/ComboChartInput'
+import PieChartInput from './components/input/PieChartInput'
 import FigureEditor from './components/editor/FigureEditor'
 import HeatmapEditor from './components/editor/HeatmapEditor'
 import BarChartEditor from './components/editor/BarChartEditor'
@@ -45,6 +51,9 @@ import FeatureEditor from './components/editor/FeatureEditor'
 import BoxEditor from './components/editor/BoxEditor'
 import ViolinEditor from './components/editor/ViolinEditor'
 import ErrorBarEditor from './components/editor/ErrorBarEditor'
+import StackedBarEditor from './components/editor/StackedBarEditor'
+import ComboChartEditor from './components/editor/ComboChartEditor'
+import PieChartEditor from './components/editor/PieChartEditor'
 import FigurePreview from './components/preview/FigurePreview'
 import FigureList from './components/common/FigureList'
 import ComposeSettings from './components/compose/ComposeSettings'
@@ -294,20 +303,77 @@ const DEFAULT_ERRORBAR: ErrorBarState = {
   },
 }
 
+const DEFAULT_STACKED_BAR: StackedBarState = {
+  id: 'fig-1',
+  type: 'stacked_bar',
+  data: { labels: ['A', 'B', 'C', 'D'], values: [[4.2, 7.8, 3.1, 6.5], [3.5, 6.1, 4.8, 5.2], [2.0, 3.0, 1.5, 2.8]] },
+  params: {
+    title: '', fontsize: 12, figsize_cm: [14, 10], dpi: 150,
+    xlabel: '', ylabel: '',
+    colors: ['#6C63FF', '#FF6584', '#43CFAA', '#FFB347', '#5BC0EB', '#C879FF'],
+    orientation: 'vertical', legend: ['系列1', '系列2', '系列3'],
+    tick_fontsize: 10, bar_width: 0.8, normalize: false, show_values: false,
+    show_grid: false, grid_linestyle: '--', legend_loc: 'best',
+    xlim: null, ylim: null,
+  },
+}
+
+const DEFAULT_COMBO: ComboState = {
+  id: 'fig-1',
+  type: 'combo_chart',
+  data: {
+    labels: ['Q1', 'Q2', 'Q3', 'Q4'],
+    bar_series:  [{ name: '売上（万円）', values: [120, 180, 150, 220] }],
+    line_series: [{ name: '成長率（%）', values: [10, 50, -17, 47] }],
+  },
+  params: {
+    title: '', fontsize: 12, figsize_cm: [14, 10], dpi: 150,
+    xlabel: '', ylabel_left: '', ylabel_right: '',
+    colors_bar:  ['#6C63FF', '#FF6584', '#43CFAA', '#FFB347'],
+    colors_line: ['#EF4444', '#F59E0B', '#10B981', '#3B82F6'],
+    bar_width: 0.6, linewidth: 2.0,
+    markers: ['o', 's', '^', 'D'],
+    tick_fontsize: 10,
+    show_grid: false, grid_linestyle: '--', legend_loc: 'best',
+    xlim: null, ylim_left: null, ylim_right: null,
+  },
+}
+
+const DEFAULT_PIE: PieState = {
+  id: 'fig-1',
+  type: 'pie_chart',
+  data: { labels: ['カテゴリA', 'カテゴリB', 'カテゴリC', 'カテゴリD'], values: [35, 28, 22, 15] },
+  params: {
+    title: '', fontsize: 12, figsize_cm: [12, 10], dpi: 150,
+    colors: ['#6C63FF', '#FF6584', '#43CFAA', '#FFB347', '#5BC0EB', '#C879FF'],
+    startangle: 90, autopct: true, pctdistance: 0.8,
+    shadow: false, donut: 0.0, legend_loc: 'none',
+    explode: [], tick_fontsize: 10,
+  },
+}
+
 const FIGURE_TYPES: { type: FigureType; label: string }[] = [
-  { type: 'confusion_matrix',   label: '混合行列' },
-  { type: 'heatmap',            label: 'ヒートマップ' },
+  // 棒系
   { type: 'bar_chart',          label: '棒グラフ' },
+  { type: 'stacked_bar',        label: '積み上げ棒' },
+  { type: 'combo_chart',        label: '棒+折れ線' },
+  // 線/点/円系
   { type: 'line_plot',          label: '折れ線' },
   { type: 'scatter_plot',       label: '散布図' },
+  { type: 'pie_chart',          label: '円グラフ' },
+  // 分布系
   { type: 'histogram',          label: 'ヒストグラム' },
+  { type: 'box_plot',           label: '箱ひげ' },
+  { type: 'violin_plot',        label: 'バイオリン' },
+  { type: 'error_bar',          label: 'エラーバー' },
+  // 行列系
+  { type: 'heatmap',            label: 'ヒートマップ' },
+  { type: 'confusion_matrix',   label: '混合行列' },
+  // ML評価系
   { type: 'roc_curve',          label: 'ROC曲線' },
   { type: 'pr_curve',           label: 'PR曲線' },
   { type: 'learning_curve',     label: '学習曲線' },
   { type: 'feature_importance', label: '特徴量重要度' },
-  { type: 'box_plot',           label: '箱ひげ' },
-  { type: 'violin_plot',        label: 'バイオリン' },
-  { type: 'error_bar',          label: 'エラーバー' },
 ]
 
 const DEFAULT_BY_TYPE: Record<FigureType, FigureState> = {
@@ -324,6 +390,9 @@ const DEFAULT_BY_TYPE: Record<FigureType, FigureState> = {
   box_plot:           DEFAULT_BOX,
   violin_plot:        DEFAULT_VIOLIN,
   error_bar:          DEFAULT_ERRORBAR,
+  stacked_bar:        DEFAULT_STACKED_BAR,
+  combo_chart:        DEFAULT_COMBO,
+  pie_chart:          DEFAULT_PIE,
 }
 
 const CLEAR_DATA_BY_TYPE: Partial<Record<FigureType, FigureState['data']>> = {
@@ -338,6 +407,9 @@ const CLEAR_DATA_BY_TYPE: Partial<Record<FigureType, FigureState['data']>> = {
   box_plot:           { groups: [[]] },
   violin_plot:        { groups: [[]] },
   error_bar:          { labels: [], series: [{ name: 'Series 1', means: [], errors: [] }] },
+  stacked_bar:        { labels: [], values: [[]] },
+  combo_chart:        { labels: [], bar_series: [{ name: 'Series 1', values: [] }], line_series: [] },
+  pie_chart:          { labels: [], values: [] },
 }
 
 const genId = () => `fig-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`
@@ -499,7 +571,10 @@ export default function App() {
   const handleFeatureParamsChange  = makeParamsHandler<FeatureParams>('feature_importance')
   const handleBoxParamsChange      = makeParamsHandler<BoxParams>('box_plot')
   const handleViolinParamsChange   = makeParamsHandler<ViolinParams>('violin_plot')
-  const handleErrorBarParamsChange = makeParamsHandler<ErrorBarParams>('error_bar')
+  const handleErrorBarParamsChange  = makeParamsHandler<ErrorBarParams>('error_bar')
+  const handleStackedBarParamsChange = makeParamsHandler<StackedBarParams>('stacked_bar')
+  const handleComboParamsChange      = makeParamsHandler<ComboParams>('combo_chart')
+  const handlePieParamsChange        = makeParamsHandler<PieParams>('pie_chart')
 
   // ----------------------------------------------------- data handlers
   const handleCMDataChange = useCallback((data: number[][]) => {
@@ -606,6 +681,25 @@ export default function App() {
     updateFigure(selectedFigure.id, (f) => ({ ...f, data } as ErrorBarState))
   }, [selectedFigure, updateFigure])
 
+  const handleStackedBarDataChange = useCallback((data: StackedBarState['data'], seriesLabels?: string[]) => {
+    if (!selectedFigure || selectedFigure.type !== 'stacked_bar') return
+    updateFigure(selectedFigure.id, (f) => {
+      const next = { ...f, data } as StackedBarState
+      if (seriesLabels) next.params = { ...next.params, legend: seriesLabels }
+      return next
+    })
+  }, [selectedFigure, updateFigure])
+
+  const handleComboDataChange = useCallback((data: ComboState['data']) => {
+    if (!selectedFigure || selectedFigure.type !== 'combo_chart') return
+    updateFigure(selectedFigure.id, (f) => ({ ...f, data } as ComboState))
+  }, [selectedFigure, updateFigure])
+
+  const handlePieDataChange = useCallback((data: PieState['data']) => {
+    if (!selectedFigure || selectedFigure.type !== 'pie_chart') return
+    updateFigure(selectedFigure.id, (f) => ({ ...f, data } as PieState))
+  }, [selectedFigure, updateFigure])
+
   const handleClearData = useCallback(() => {
     if (!selectedFigure) return
     const cleared = CLEAR_DATA_BY_TYPE[selectedFigure.type]
@@ -632,7 +726,10 @@ export default function App() {
   const handleFeatureReset  = makeReset(DEFAULT_FEATURE)
   const handleBoxReset      = makeReset(DEFAULT_BOX)
   const handleViolinReset   = makeReset(DEFAULT_VIOLIN)
-  const handleErrorBarReset = makeReset(DEFAULT_ERRORBAR)
+  const handleErrorBarReset    = makeReset(DEFAULT_ERRORBAR)
+  const handleStackedBarReset  = makeReset(DEFAULT_STACKED_BAR)
+  const handleComboReset       = makeReset(DEFAULT_COMBO)
+  const handlePieReset         = makeReset(DEFAULT_PIE)
 
   // ----------------------------------------------------- download
   const handleDownload = async () => {
@@ -847,6 +944,15 @@ export default function App() {
                       {selectedFigure.type === 'error_bar' && (
                         <ErrorBarInput data={(selectedFigure as ErrorBarState).data} onChange={handleErrorBarDataChange} />
                       )}
+                      {selectedFigure.type === 'stacked_bar' && (
+                        <StackedBarInput data={(selectedFigure as StackedBarState).data} onChange={handleStackedBarDataChange} />
+                      )}
+                      {selectedFigure.type === 'combo_chart' && (
+                        <ComboChartInput data={(selectedFigure as ComboState).data} onChange={handleComboDataChange} />
+                      )}
+                      {selectedFigure.type === 'pie_chart' && (
+                        <PieChartInput data={(selectedFigure as PieState).data} onChange={handlePieDataChange} />
+                      )}
                     </section>
 
                     <section className="p-4">
@@ -889,6 +995,15 @@ export default function App() {
                       )}
                       {selectedFigure.type === 'error_bar' && (
                         <ErrorBarEditor figure={selectedFigure as ErrorBarState} onChange={handleErrorBarParamsChange} onReset={handleErrorBarReset} />
+                      )}
+                      {selectedFigure.type === 'stacked_bar' && (
+                        <StackedBarEditor figure={selectedFigure as StackedBarState} onChange={handleStackedBarParamsChange} onReset={handleStackedBarReset} />
+                      )}
+                      {selectedFigure.type === 'combo_chart' && (
+                        <ComboChartEditor figure={selectedFigure as ComboState} onChange={handleComboParamsChange} onReset={handleComboReset} />
+                      )}
+                      {selectedFigure.type === 'pie_chart' && (
+                        <PieChartEditor figure={selectedFigure as PieState} onChange={handlePieParamsChange} onReset={handlePieReset} />
                       )}
                     </section>
                   </div>

@@ -12,6 +12,9 @@ export type FigureType =
   | 'box_plot'
   | 'violin_plot'
   | 'error_bar'
+  | 'stacked_bar'
+  | 'combo_chart'
+  | 'pie_chart'
 
 export type OutputFormat = 'png' | 'svg' | 'pdf' | 'eps'
 
@@ -348,6 +351,87 @@ export interface ErrorBarParams extends BaseFigureParams {
 }
 export type ErrorBarState = BaseFigureState & { type: 'error_bar'; data: ErrorBarData; params: ErrorBarParams }
 
+// ------------------------------------------------------------------ Phase 8 (new chart types)
+
+// stacked_bar
+export type StackedBarData = { labels: string[]; values: number[][] }
+
+export interface StackedBarParams extends BaseFigureParams {
+  xlabel: string
+  ylabel: string
+  colors: string[]
+  orientation: 'vertical' | 'horizontal'
+  legend: string[]
+  tick_fontsize: number
+  bar_width: number
+  normalize: boolean
+  show_values: boolean
+  show_grid: boolean
+  grid_linestyle: string
+  legend_loc: string
+  xlim: [number, number] | null
+  ylim: [number, number] | null
+}
+
+export type StackedBarState = BaseFigureState & {
+  type: 'stacked_bar'
+  data: StackedBarData
+  params: StackedBarParams
+}
+
+// combo_chart
+export type ComboSeriesItem = { name: string; values: number[] }
+export type ComboData = {
+  labels: string[]
+  bar_series: ComboSeriesItem[]
+  line_series: ComboSeriesItem[]
+}
+
+export interface ComboParams extends BaseFigureParams {
+  xlabel: string
+  ylabel_left: string
+  ylabel_right: string
+  colors_bar: string[]
+  colors_line: string[]
+  bar_width: number
+  linewidth: number
+  markers: string[]
+  tick_fontsize: number
+  show_grid: boolean
+  grid_linestyle: string
+  legend_loc: string
+  xlim: [number, number] | null
+  ylim_left: [number, number] | null
+  ylim_right: [number, number] | null
+}
+
+export type ComboState = BaseFigureState & {
+  type: 'combo_chart'
+  data: ComboData
+  params: ComboParams
+}
+
+// pie_chart
+export type PieData = { labels: string[]; values: number[] }
+
+export interface PieParams extends BaseFigureParams {
+  colors: string[]
+  startangle: number
+  autopct: boolean
+  pctdistance: number
+  shadow: boolean
+  donut: number
+  legend_loc: string
+  explode: number[]
+  tick_fontsize: number
+}
+
+export type PieState = BaseFigureState & {
+  type: 'pie_chart'
+  data: PieData
+  params: PieParams
+}
+
 // ------------------------------------------------------------------ union
 export type FigureState =
   | ConfusionMatrixState
@@ -363,6 +447,9 @@ export type FigureState =
   | BoxState
   | ViolinState
   | ErrorBarState
+  | StackedBarState
+  | ComboState
+  | PieState
 
 // ------------------------------------------------------------------ compose
 
