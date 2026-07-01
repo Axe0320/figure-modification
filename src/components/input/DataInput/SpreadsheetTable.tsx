@@ -39,7 +39,7 @@ export default function SpreadsheetTable({ columns, rows, onChange, onAddColumn,
     const el = containerRef.current?.querySelector<HTMLInputElement>(
       `input[data-r="${r}"][data-c="${c}"]`
     )
-    if (el) { el.focus(); el.select() }
+    if (el) { el.focus(); el.select(); el.scrollIntoView({ block: 'nearest' }) }
     setPendingFocus(null)
   }, [pendingFocus])
 
@@ -89,6 +89,8 @@ export default function SpreadsheetTable({ columns, rows, onChange, onAddColumn,
   }
 
   const handleAddRow = () => {
+    const next = [...displayRows, Array(nCols).fill('')]
+    onChange(next)
     setPendingFocus([displayRows.length - 1, 0])
   }
 

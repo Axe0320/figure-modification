@@ -67,9 +67,10 @@ export default function FeatureInput({ data, onChange }: Props) {
 
   const handleManualChange = (rows: string[][]) => {
     setManualRows(rows)
+    const nonEmpty = rows.filter(r => r.some(v => v !== ''))
     onChange({
-      features:    rows.map(r => r[0] || ''),
-      importances: rows.map(r => parseFloat(r[1] ?? '') || 0),
+      features:    nonEmpty.map(r => r[0] || ''),
+      importances: nonEmpty.map(r => parseFloat(r[1] ?? '') || 0),
     })
   }
 

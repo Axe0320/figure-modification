@@ -58,8 +58,8 @@ function dataToEntries(data: PrData): SeriesEntry[] {
 function entriesToData(entries: SeriesEntry[]): { data: PrData; labels: string[] } {
   return {
     data: {
-      recall:    entries.map(e => e.rows.map(r => parseFloat(r[0] ?? '') || 0)),
-      precision: entries.map(e => e.rows.map(r => parseFloat(r[1] ?? '') || 0)),
+      recall:    entries.map(e => e.rows.filter(r => r.some(v => v !== '')).map(r => parseFloat(r[0] ?? '') || 0)),
+      precision: entries.map(e => e.rows.filter(r => r.some(v => v !== '')).map(r => parseFloat(r[1] ?? '') || 0)),
       ap:        entries.map(e => parseFloat(e.scalar ?? '0') || 0),
     },
     labels: entries.map(e => e.label),

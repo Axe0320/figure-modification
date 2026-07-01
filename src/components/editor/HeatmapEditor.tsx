@@ -1,4 +1,4 @@
-import { useState } from 'react'
+﻿import { useState } from 'react'
 import type { HeatmapState, HeatmapParams } from '../../types/figures'
 import TextEditor from './TextEditor'
 import SizeEditor from './SizeEditor'
@@ -21,7 +21,7 @@ const SECTIONS: { key: Section; label: string }[] = [
 ]
 
 export default function HeatmapEditor({ figure, onChange, onReset }: Props) {
-  const [open, setOpen] = useState<Section>('text')
+  const [open, setOpen] = useState<Section | null>('text')
 
   const toggle = (s: Section) => setOpen((prev) => (prev === s ? 'text' : s))
 

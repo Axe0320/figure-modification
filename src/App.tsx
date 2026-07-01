@@ -427,6 +427,8 @@ export default function App() {
   } = useFigureStore()
 
   const [appMode, setAppMode]           = useState<AppMode>('edit')
+  const [openData, setOpenData]         = useState(true)
+  const [openParams, setOpenParams]     = useState(true)
   const [previews, setPreviews]         = useState<Record<string, string>>({})
   const [loading, setLoading]           = useState(false)
   const [error, setError]               = useState<string | null>(null)
@@ -892,12 +894,18 @@ export default function App() {
             <>
               {selectedFigure && (
                 <div className="flex-1 overflow-y-auto">
-                    <section className="p-4 border-b border-gray-100">
-                      <div className="flex items-center justify-between mb-3">
-                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">データ入力</p>
-                        {CLEAR_DATA_BY_TYPE[selectedFigure.type] !== undefined && (
+                    <section className="border-b border-gray-100">
+                      <div
+                        className="flex items-center justify-between px-4 py-3 cursor-pointer select-none"
+                        onClick={() => setOpenData(v => !v)}
+                      >
+                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest flex items-center gap-1">
+                          <span style={{ fontSize: 9, color: '#9CA3AF', transition: 'transform .2s', display: 'inline-block', transform: openData ? 'rotate(90deg)' : 'rotate(0deg)' }}>▶</span>
+                          データ入力
+                        </p>
+                        {openData && CLEAR_DATA_BY_TYPE[selectedFigure.type] !== undefined && (
                           <button
-                            onClick={handleClearData}
+                            onClick={(e) => { e.stopPropagation(); handleClearData() }}
                             className="text-xs font-semibold px-2.5 py-1 transition-all"
                             style={{ color: '#EF4444', border: '1px solid #FCA5A5', borderRadius: 6, background: '#FFF5F5' }}
                             onMouseEnter={(e) => { e.currentTarget.style.background = '#FEE2E2' }}
@@ -907,6 +915,7 @@ export default function App() {
                           </button>
                         )}
                       </div>
+                      {openData && <div className="px-4 pb-4">
                       {selectedFigure.type === 'confusion_matrix' && (
                         <CreateMode data={selectedFigure.data} onDataChange={handleCMDataChange} />
                       )}
@@ -955,10 +964,20 @@ export default function App() {
                       {selectedFigure.type === 'pie_chart' && (
                         <PieChartInput data={(selectedFigure as PieState).data} onChange={handlePieDataChange} />
                       )}
+                      </div>}
                     </section>
 
-                    <section className="p-4">
-                      <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-3">パラメータ</p>
+                    <section>
+                      <div
+                        className="flex items-center justify-between px-4 py-3 cursor-pointer select-none"
+                        onClick={() => setOpenParams(v => !v)}
+                      >
+                        <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest flex items-center gap-1">
+                          <span style={{ fontSize: 9, color: '#9CA3AF', transition: 'transform .2s', display: 'inline-block', transform: openParams ? 'rotate(90deg)' : 'rotate(0deg)' }}>▶</span>
+                          パラメータ
+                        </p>
+                      </div>
+                      {openParams && <div className="px-4 pb-4">
                       {selectedFigure.type === 'confusion_matrix' && (
                         <FigureEditor figure={selectedFigure as ConfusionMatrixState} onChange={handleCMParamsChange} onReset={handleCMReset} />
                       )}
@@ -1007,6 +1026,7 @@ export default function App() {
                       {selectedFigure.type === 'pie_chart' && (
                         <PieChartEditor figure={selectedFigure as PieState} onChange={handlePieParamsChange} onReset={handlePieReset} />
                       )}
+                      </div>}
                     </section>
                   </div>
               )}

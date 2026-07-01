@@ -58,8 +58,8 @@ function dataToEntries(data: RocData): SeriesEntry[] {
 function entriesToData(entries: SeriesEntry[]): { data: RocData; labels: string[] } {
   return {
     data: {
-      fpr: entries.map(e => e.rows.map(r => parseFloat(r[0] ?? '') || 0)),
-      tpr: entries.map(e => e.rows.map(r => parseFloat(r[1] ?? '') || 0)),
+      fpr: entries.map(e => e.rows.filter(r => r.some(v => v !== '')).map(r => parseFloat(r[0] ?? '') || 0)),
+      tpr: entries.map(e => e.rows.filter(r => r.some(v => v !== '')).map(r => parseFloat(r[1] ?? '') || 0)),
       auc: entries.map(e => parseFloat(e.scalar ?? '0') || 0),
     },
     labels: entries.map(e => e.label),

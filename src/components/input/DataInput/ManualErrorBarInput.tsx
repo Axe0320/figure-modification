@@ -25,12 +25,13 @@ function buildColumns(seriesNames: string[]): SpreadsheetColumn[] {
 }
 
 function rowsToData(rows: string[][], seriesNames: string[]): ErrorBarData {
+  const nonEmpty = rows.filter(r => r.some(v => v !== ''))
   return {
-    labels: rows.map(r => r[0] || ''),
+    labels: nonEmpty.map(r => r[0] || ''),
     series: seriesNames.map((name, si) => ({
       name,
-      means:  rows.map(r => parseFloat(r[1 + si * 2] ?? '') || 0),
-      errors: rows.map(r => parseFloat(r[2 + si * 2] ?? '') || 0),
+      means:  nonEmpty.map(r => parseFloat(r[1 + si * 2] ?? '') || 0),
+      errors: nonEmpty.map(r => parseFloat(r[2 + si * 2] ?? '') || 0),
     })),
   }
 }

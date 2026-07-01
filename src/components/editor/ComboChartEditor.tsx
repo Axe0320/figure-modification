@@ -1,4 +1,4 @@
-import { useState } from 'react'
+﻿import { useState } from 'react'
 import type { ComboState, ComboParams } from '../../types/figures'
 import SizeEditor from './SizeEditor'
 import HexColorEditor from './HexColorEditor'
@@ -73,7 +73,7 @@ function LimInput({ label, value, onChange }: { label: string; value: [number, n
 }
 
 export default function ComboChartEditor({ figure, onChange, onReset }: Props) {
-  const [open, setOpen] = useState<Section>('text')
+  const [open, setOpen] = useState<Section | null>('text')
   const p = figure.params
   const nBars  = figure.data.bar_series.length
   const nLines = figure.data.line_series.length
@@ -104,7 +104,7 @@ export default function ComboChartEditor({ figure, onChange, onReset }: Props) {
           style={{ border: open === key ? '1px solid #C4B5FD' : '1px solid #E5E7EB', borderRadius: 10 }}>
           <button className="w-full flex items-center justify-between px-3 py-2.5"
             style={{ background: open === key ? '#F5F3FF' : 'white' }}
-            onClick={() => setOpen((prev) => prev === key ? 'text' : key)}>
+            onClick={() => setOpen((prev) => prev === key ? null : key)}>
             <span className="text-xs font-semibold" style={{ color: open === key ? '#6C63FF' : '#374151' }}>{label}</span>
             <span style={{ color: open === key ? '#6C63FF' : '#9CA3AF' }}>{open === key ? '▲' : '▼'}</span>
           </button>
@@ -147,7 +147,7 @@ export default function ComboChartEditor({ figure, onChange, onReset }: Props) {
                       <span className="text-xs text-gray-500 w-8">{p.linewidth}</span>
                     </div>
                   </div>
-                  <PaletteButtons onChange={(colors) => onChange({ colors_bar: colors, colors_line: [...colors].reverse() })} />
+                  <PaletteButtons currentColors={figure.params.colors_bar} onChange={(colors) => onChange({ colors_bar: colors, colors_line: [...colors].reverse() })} />
                   {nBars > 0 && (
                     <div>
                       <label className="block text-xs text-gray-500 mb-1.5">棒の色</label>
@@ -155,7 +155,7 @@ export default function ComboChartEditor({ figure, onChange, onReset }: Props) {
                         {Array.from({ length: nBars }, (_, i) => (
                           <div key={i} className="space-y-1">
                             <span className="text-xs text-gray-400">{figure.data.bar_series[i]?.name || `棒 ${i+1}`}</span>
-                            <HexColorEditor value={p.colors_bar[i] ?? '#6C63FF'} onChange={(c) => setBarColor(i, c)} />
+                            <HexColorEditor value={p.colors_bar[i] ?? '#6C63FF'} paletteColors={figure.params.colors_bar} onChange={(c) => setBarColor(i, c)} />
                           </div>
                         ))}
                       </div>
@@ -168,7 +168,7 @@ export default function ComboChartEditor({ figure, onChange, onReset }: Props) {
                         {Array.from({ length: nLines }, (_, i) => (
                           <div key={i} className="space-y-1">
                             <span className="text-xs text-gray-400">{figure.data.line_series[i]?.name || `折れ線 ${i+1}`}</span>
-                            <HexColorEditor value={p.colors_line[i] ?? '#EF4444'} onChange={(c) => setLineColor(i, c)} />
+                            <HexColorEditor value={p.colors_line[i] ?? '#EF4444'} paletteColors={figure.params.colors_line} onChange={(c) => setLineColor(i, c)} />
                             <div className="flex flex-wrap gap-1 mt-1">
                               {MARKERS.map((m) => (
                                 <button key={m} onClick={() => setMarker(i, m)} style={is((p.markers[i] ?? 'o') === m)}>{m === 'none' ? 'なし' : m}</button>

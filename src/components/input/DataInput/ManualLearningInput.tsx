@@ -29,7 +29,8 @@ export default function ManualLearningInput({ initRows, initSeries, onChange }: 
   ]
 
   const emit = (r: string[][], s: LearningSeriesConfig[]) => {
-    onChange(r.map(row => padRow(row, 1 + s.length)), s)
+    const nonEmpty = r.filter(row => row.some(v => v !== ''))
+    onChange(nonEmpty.map(row => padRow(row, 1 + s.length)), s)
   }
 
   const handleTableChange = (newRows: string[][]) => {

@@ -54,8 +54,9 @@ export default function PieChartInput({ data, onChange }: Props) {
 
   const handleManualChange = (rows: string[][]) => {
     setManualRows(rows)
-    const labels = rows.map(r => r[0] || '')
-    const values = rows.map(r => parseFloat(r[1] ?? '') || 0)
+    const nonEmpty = rows.filter(r => r.some(v => v !== ''))
+    const labels = nonEmpty.map(r => r[0] || '')
+    const values = nonEmpty.map(r => parseFloat(r[1] ?? '') || 0)
     onChange({ labels, values })
   }
 

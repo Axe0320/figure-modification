@@ -1,4 +1,4 @@
-import { useState } from 'react'
+﻿import { useState } from 'react'
 import type { PieState, PieParams } from '../../types/figures'
 import SizeEditor from './SizeEditor'
 import HexColorEditor from './HexColorEditor'
@@ -58,7 +58,7 @@ function Slider({ label, value, min, max, step = 1, unit = '', onChange }: {
 }
 
 export default function PieChartEditor({ figure, onChange, onReset }: Props) {
-  const [open, setOpen] = useState<Section>('text')
+  const [open, setOpen] = useState<Section | null>('text')
   const p = figure.params
   const nSlices = figure.data.labels.length
 
@@ -87,7 +87,7 @@ export default function PieChartEditor({ figure, onChange, onReset }: Props) {
           style={{ border: open === key ? '1px solid #C4B5FD' : '1px solid #E5E7EB', borderRadius: 10 }}>
           <button className="w-full flex items-center justify-between px-3 py-2.5"
             style={{ background: open === key ? '#F5F3FF' : 'white' }}
-            onClick={() => setOpen((prev) => prev === key ? 'text' : key)}>
+            onClick={() => setOpen((prev) => prev === key ? null : key)}>
             <span className="text-xs font-semibold" style={{ color: open === key ? '#6C63FF' : '#374151' }}>{label}</span>
             <span style={{ color: open === key ? '#6C63FF' : '#9CA3AF' }}>{open === key ? '▲' : '▼'}</span>
           </button>
@@ -125,14 +125,14 @@ export default function PieChartEditor({ figure, onChange, onReset }: Props) {
                       ))}
                     </div>
                   </div>
-                  <PaletteButtons onChange={(colors) => onChange({ colors })} />
+                  <PaletteButtons currentColors={figure.params.colors} onChange={(colors) => onChange({ colors })} />
                   <div>
                     <label className="block text-xs text-gray-500 mb-1.5">スライスの色・飛び出し</label>
                     <div className="space-y-3">
                       {figure.data.labels.map((lbl, i) => (
                         <div key={i} className="space-y-1">
                           <span className="text-xs text-gray-400 block truncate">{lbl || `Slice ${i + 1}`}</span>
-                          <HexColorEditor value={p.colors[i] ?? '#6C63FF'} onChange={(c) => setColor(i, c)} />
+                          <HexColorEditor value={p.colors[i] ?? '#6C63FF'} paletteColors={figure.params.colors} onChange={(c) => setColor(i, c)} />
                           <div className="flex items-center gap-2">
                             <label className="text-xs text-gray-400 w-14 shrink-0">飛び出し</label>
                             <input type="range" min={0} max={0.3} step={0.02} value={p.explode[i] ?? 0}

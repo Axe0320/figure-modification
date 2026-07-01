@@ -42,10 +42,13 @@ function dataToEntries(data: ScatterData): SeriesEntry[] {
 
 function entriesToData(entries: SeriesEntry[]): ScatterData {
   return {
-    series: entries.map(e => ({
-      x: e.rows.map(r => parseFloat(r[0] ?? '') || 0),
-      y: e.rows.map(r => parseFloat(r[1] ?? '') || 0),
-    })),
+    series: entries.map(e => {
+      const nonEmpty = e.rows.filter(r => r.some(v => v !== ''))
+      return {
+        x: nonEmpty.map(r => parseFloat(r[0] ?? '') || 0),
+        y: nonEmpty.map(r => parseFloat(r[1] ?? '') || 0),
+      }
+    }),
   }
 }
 

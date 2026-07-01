@@ -1,4 +1,4 @@
-import { useState } from 'react'
+﻿import { useState } from 'react'
 import type { ConfusionMatrixState, ConfusionMatrixParams } from '../../types/figures'
 import TextEditor from './TextEditor'
 import ColorEditor from './ColorEditor'
@@ -21,7 +21,7 @@ const SECTIONS: { key: Section; label: string }[] = [
 ]
 
 export default function FigureEditor({ figure, onChange, onReset }: Props) {
-  const [open, setOpen] = useState<Section>('text')
+  const [open, setOpen] = useState<Section | null>('text')
 
   const toggle = (s: Section) => setOpen((prev) => prev === s ? 'text' : s)
 

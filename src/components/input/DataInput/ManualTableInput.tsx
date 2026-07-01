@@ -29,7 +29,8 @@ export default function ManualTableInput({
   const nCols = 1 + seriesNames.length
 
   const emit = (r: string[][], names: string[]) => {
-    onChange(r.map(row => padRow(row, 1 + names.length)), names)
+    const nonEmpty = r.filter(row => row.some(v => v !== ''))
+    onChange(nonEmpty.map(row => padRow(row, 1 + names.length)), names)
   }
 
   const handleTableChange = (newRows: string[][]) => {

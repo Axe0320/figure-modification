@@ -1,4 +1,4 @@
-import { useState } from 'react'
+﻿import { useState } from 'react'
 import type { StackedBarState, StackedBarParams } from '../../types/figures'
 import SizeEditor from './SizeEditor'
 import HexColorEditor from './HexColorEditor'
@@ -72,7 +72,7 @@ function LimInput({ label, value, onChange }: { label: string; value: [number, n
 }
 
 export default function StackedBarEditor({ figure, onChange, onReset }: Props) {
-  const [open, setOpen] = useState<Section>('text')
+  const [open, setOpen] = useState<Section | null>('text')
   const p = figure.params
   const nSeries = figure.data.values.length
 
@@ -99,7 +99,7 @@ export default function StackedBarEditor({ figure, onChange, onReset }: Props) {
           style={{ border: open === key ? '1px solid #C4B5FD' : '1px solid #E5E7EB', borderRadius: 10 }}>
           <button className="w-full flex items-center justify-between px-3 py-2.5"
             style={{ background: open === key ? '#F5F3FF' : 'white' }}
-            onClick={() => setOpen((prev) => prev === key ? 'text' : key)}>
+            onClick={() => setOpen((prev) => prev === key ? null : key)}>
             <span className="text-xs font-semibold" style={{ color: open === key ? '#6C63FF' : '#374151' }}>{label}</span>
             <span style={{ color: open === key ? '#6C63FF' : '#9CA3AF' }}>{open === key ? '▲' : '▼'}</span>
           </button>
@@ -143,14 +143,14 @@ export default function StackedBarEditor({ figure, onChange, onReset }: Props) {
                       <span className="text-xs text-gray-500 w-8">{p.bar_width.toFixed(2)}</span>
                     </div>
                   </div>
-                  <PaletteButtons onChange={(colors) => onChange({ colors })} />
+                  <PaletteButtons currentColors={figure.params.colors} onChange={(colors) => onChange({ colors })} />
                   <div>
                     <label className="block text-xs text-gray-500 mb-1.5">系列の色</label>
                     <div className="space-y-2">
                       {Array.from({ length: nSeries }, (_, i) => (
                         <div key={i} className="space-y-1">
                           <span className="text-xs text-gray-400 block">系列 {i + 1}</span>
-                          <HexColorEditor value={p.colors[i] ?? '#6C63FF'} onChange={(c) => setColor(i, c)} />
+                          <HexColorEditor value={p.colors[i] ?? '#6C63FF'} paletteColors={figure.params.colors} onChange={(c) => setColor(i, c)} />
                         </div>
                       ))}
                     </div>
