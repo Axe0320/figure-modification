@@ -38,7 +38,12 @@ export default function FigurePreview({ b64, loading, error, format, downloadLoa
           </div>
         )}
         {!loading && !error && b64 && (
-          <img src={`data:image/png;base64,${b64}`} alt="Generated figure" className="w-full h-auto block p-4" />
+          <img
+            src={`data:image/png;base64,${b64}`}
+            alt="Generated figure"
+            className="block p-4"
+            style={{ maxWidth: '100%', height: 'auto', width: 'auto', margin: '0 auto' }}
+          />
         )}
         {!loading && !error && !b64 && (
           <div className="absolute inset-0 flex items-center justify-center">

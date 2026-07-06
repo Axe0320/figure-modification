@@ -1051,15 +1051,17 @@ export default function App() {
         {/* 右パネル */}
         <div className="flex-1 p-6 flex flex-col overflow-auto">
           {appMode === 'edit' ? (
-            <FigurePreview
-              b64={selectedFigure ? (previews[selectedFigure.id] ?? null) : null}
-              loading={loading}
-              error={error}
-              format={downloadFormat}
-              downloadLoading={downloadLoading}
-              onFormatChange={setDownloadFormat}
-              onDownload={handleDownload}
-            />
+            <div style={{ maxWidth: 760, width: '100%', margin: '0 auto' }}>
+              <FigurePreview
+                b64={selectedFigure ? (previews[selectedFigure.id] ?? null) : null}
+                loading={loading}
+                error={error}
+                format={downloadFormat}
+                downloadLoading={downloadLoading}
+                onFormatChange={setDownloadFormat}
+                onDownload={handleDownload}
+              />
+            </div>
           ) : (
             <ComposeCanvas figures={figures} layout={layout} previews={previews} />
           )}
